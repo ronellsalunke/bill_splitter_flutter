@@ -12,6 +12,9 @@ import 'package:bs_flutter/utils/utility.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
+import 'package:bs_flutter/app/repository/repository.dart';
 
 class EditBillScreen extends StatefulWidget {
   const EditBillScreen({super.key, required this.billId});
@@ -107,6 +110,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
   final _taxController = TextEditingController(text: '5.0');
   final _serviceController = TextEditingController();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
+  bool _isOcrProcessing = false;
 
   @override
   void initState() {
@@ -147,6 +151,75 @@ class _EditBillScreenState extends State<EditBillScreen> {
     setState(() {});
   }
 
+  void _populateFromOcr(OcrModel model) {
+    // Clear existing items
+    _formData.items.clear();
+    // Populate items
+    if (model.items != null) {
+      for (var item in model.items!) {
+        if (item != null) {
+          var formItem = _ItemFormData()
+            ..name = item.name ?? ''
+            ..price = (item.price ?? 0).toDouble()
+            ..quantity = item.quantity ?? 1
+            ..consumedBy = []
+            ..nameController.text = item.name ?? ''
+            ..priceController.text = (item.price ?? 0).toString()
+            ..quantityController.text = (item.quantity ?? 1).toString();
+          _formData.items.add(formItem);
+        }
+      }
+    }
+    // Populate other fields
+    _amountController.text = (model.amountPaid ?? 0.00).toString();
+    _taxController.text = ((model.taxRate ?? 0.00) * 100).toString();
+    _serviceController.text = ((model.serviceCharge ?? 0.00) * 100).toString();
+    // Trigger rebuild
+    setState(() {});
+  }
+
+  Future<void> _onOcrTap() async {
+    final source = await showDialog<ImageSource>(
+      context: context,
+      builder: (context) => SimpleDialog(
+        title: const Text('Select Image Source'),
+        children: [
+          SimpleDialogOption(onPressed: () => Navigator.pop(context, ImageSource.gallery), child: const Text('Gallery')),
+          SimpleDialogOption(onPressed: () => Navigator.pop(context, ImageSource.camera), child: const Text('Camera')),
+        ],
+      ),
+    );
+
+    if (source == null) return;
+
+    final image = await Utility.pickImage(context, source);
+    if (image == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No image selected')));
+      return;
+    }
+
+    final hasConnection = await Utility.hasInternetConnection();
+    if (!hasConnection) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No internet connection. Please check your connection and try again.')));
+      return;
+    }
+
+    setState(() => _isOcrProcessing = true);
+    try {
+      final repository = AppRepository();
+      final ocrModel = await repository.processReceipt(image);
+      _populateFromOcr(ocrModel);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt processed successfully')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to process receipt: ${e.toString()}')));
+    } finally {
+      await image.delete();
+      setState(() => _isOcrProcessing = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<BillBloc, BillState>(
@@ -171,12 +244,10 @@ class _EditBillScreenState extends State<EditBillScreen> {
               children: [
                 verticalSpace(12),
                 DottedButton(
-                  text: 'upload receipt (OCR)',
-                  icon: Icons.file_upload_outlined,
+                  text: _isOcrProcessing ? 'Processing...' : 'upload receipt (OCR)',
+                  icon: _isOcrProcessing ? null : Icons.file_upload_outlined,
                   mainAxisSize: MainAxisSize.max,
-                  onTap: () {
-                    Utility.pickImg(context);
-                  },
+                  onTap: _isOcrProcessing ? null : _onOcrTap,
                 ),
                 verticalSpace(20),
                 CommonTextField(label: 'PAID BY', hintText: 'enter name', controller: _paidByController),
@@ -211,16 +282,16 @@ class _EditBillScreenState extends State<EditBillScreen> {
                 ),
 
                 verticalSpace(20),
-                Text('ITEMS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
+                const Text('ITEMS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
                 verticalSpace(10),
                 Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList()),
               ],
             ).paddingSymmetric(horizontal: 16),
           ),
           bottomNavigationBar: Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppColors.backgroundColor,
-              border: const Border(top: BorderSide(color: Colors.black, width: 1)),
+              border: Border(top: BorderSide(color: Colors.black, width: 1)),
             ),
             padding: const EdgeInsets.all(16),
             child: SafeArea(

@@ -12,7 +12,7 @@ class DioSingleton {
   }
 
   DioSingleton._internal() {
-    _dio = Dio(BaseOptions(connectTimeout: const Duration(seconds: 10), receiveTimeout: const Duration(seconds: 10)));
+    _dio = Dio(BaseOptions(connectTimeout: const Duration(minutes: 2), receiveTimeout: const Duration(minutes: 2)));
     _dio.interceptors.add(
       PrettyDioLogger(
         requestHeader: true,

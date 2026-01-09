@@ -1,16 +1,18 @@
 # bs_flutter
 
-A new Flutter project.
+A client for [bill-splitter](https://github.com/ksdfg/bill-splitter).
 
-## Getting Started
+## Building and running the app
 
-This project is a starting point for a Flutter application.
+This app used `build_runner` along with `freezed` for code generation
 
-A few resources to get you started if this is your first Flutter project:
+1. Generate code using
+    ``` bash
+    dart run build_runner build
+    ```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Run the app using
+    ``` bash
+    flutter run lib/main.dart
+   ```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

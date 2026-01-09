@@ -20,7 +20,7 @@ abstract class PaymentPlans with _$PaymentPlans {
 
 @unfreezed
 abstract class Payments with _$Payments {
-  factory Payments({String? to, int? amount}) = _Payments;
+  factory Payments({String? to, double? amount}) = _Payments;
 
   factory Payments.fromJson(Map<String, dynamic> json) => _$PaymentsFromJson(json);
 }
