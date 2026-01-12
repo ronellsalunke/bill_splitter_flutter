@@ -2,19 +2,19 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/models/bill.dart';
+import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
+import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
-import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:bs_flutter/utils/utility.dart';
+import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
-import 'package:bs_flutter/app/repository/repository.dart';
 
 class EditBillScreen extends StatefulWidget {
   const EditBillScreen({super.key, required this.billId});
@@ -179,17 +179,33 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   Future<void> _onOcrTap() async {
-    final source = await showDialog<ImageSource>(
+    final source = await showModalBottomSheet<ImageSource>(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
       context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('Select Image Source'),
-        children: [
-          SimpleDialogOption(onPressed: () => Navigator.pop(context, ImageSource.gallery), child: const Text('Gallery')),
-          SimpleDialogOption(onPressed: () => Navigator.pop(context, ImageSource.camera), child: const Text('Camera')),
-        ],
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined, size: 24),
+              title: const Text('Gallery', style: TextStyle(fontSize: 14)),
+              onTap: () => context.pop(ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined, size: 24),
+              title: const Text('Camera', style: TextStyle(fontSize: 14)),
+              onTap: () => context.pop(ImageSource.camera),
+            ),
+            const Divider(),
+            ListTile(
+              title: const Text('Cancel', textAlign: TextAlign.center),
+              onTap: () => context.pop(),
+            ),
+          ],
+        ),
       ),
     );
-
     if (source == null) return;
 
     final image = await Utility.pickImage(context, source);
@@ -207,16 +223,28 @@ class _EditBillScreenState extends State<EditBillScreen> {
     }
 
     setState(() => _isOcrProcessing = true);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.buttonColor)),
+    );
     try {
       final repository = AppRepository();
       final ocrModel = await repository.processReceipt(image);
       _populateFromOcr(ocrModel);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt processed successfully')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt processed successfully')));
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to process receipt: ${e.toString()}')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to process receipt: ${e.toString()}')));
+      }
     } finally {
       await image.delete();
       setState(() => _isOcrProcessing = false);
+      if (mounted) {
+        Navigator.of(context).pop(); // dismiss loading dialog
+      }
     }
   }
 
