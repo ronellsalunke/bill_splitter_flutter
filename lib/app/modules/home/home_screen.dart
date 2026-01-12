@@ -105,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         SvgPicture.asset(AppIcons.logoIcon, color: AppColors.hintColor, width: 60, height: 60),
         verticalSpace(12),
-        Text('no bills yet', style: TextStyle(color: AppColors.hintColor)),
+        const Text('no bills yet', style: TextStyle(color: AppColors.hintColor)),
         verticalSpace(24),
 
         DottedButton(
@@ -165,12 +165,12 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             verticalSpace(8),
-            DottedLine(dashLength: 6, dashColor: AppColors.dividerColor),
+            const DottedLine(dashLength: 6, dashColor: AppColors.dividerColor),
             verticalSpace(8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('total', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                const Text('total', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
                 horizontalSpace(8),
                 Text('₹ ${bill.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
               ],
@@ -191,8 +191,8 @@ Widget itemQtyWidget(List<BillItem> items) {
           (item) => Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${item.quantity} x ${item.name}', style: TextStyle(fontSize: 12)),
-              Text('₹ ${item.price.toStringAsFixed(2)}', style: TextStyle(fontSize: 12)),
+              Text('${item.quantity} x ${item.name}', style: const TextStyle(fontSize: 12)),
+              Text('₹ ${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
             ],
           ).paddingSymmetric(vertical: 4),
         )

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -222,18 +223,14 @@ extension WidgetExtension on Widget? {
   }
 
   /// Blur
-  // Widget backgroundBlur({double? blur, Color? bgColor}) {
-  //   return ClipRRect(
-  //     child: BackdropFilter(
-  //       filter: ImageFilter.blur(
-  //           sigmaY: blur ?? 20,
-  //           sigmaX: blur ?? 20,
-  //           tileMode: TileMode.mirror
-  //       ),
-  //       child: Container(color: bgColor ?? Colors.white30, child: this!),
-  //     ),
-  //   );
-  // }
+  Widget backgroundBlur({double? blur, Color? bgColor}) {
+    return ClipRRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaY: blur ?? 20, sigmaX: blur ?? 20, tileMode: TileMode.mirror),
+        child: Container(color: bgColor ?? Colors.white30, child: this!),
+      ),
+    );
+  }
 
   /// Shimmer Loading
   // Widget shimmerLoading({double? radius}){
@@ -244,15 +241,15 @@ extension WidgetExtension on Widget? {
   //   );
   // }
   //
-  // /// Animate
+  /// Animate
   // Widget isAnimate() {
   //   return Animate(
   //     effects: fadeAnimation,
   //     child: this!,
   //   );
   // }
-  //
-  // /// Dropdown View
+
+  /// Dropdown View
   // Widget dropdownDecoration(){
   //   return Container(
   //     height: 50,
