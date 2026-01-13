@@ -46,6 +46,8 @@ class _NameChipsFieldState extends State<NameChipsField> {
           hintText: 'add names',
           label: 'consumed by',
           controller: _controller,
+          textCapitalization: TextCapitalization.words,
+          keyboardType: TextInputType.name,
           onFieldSubmitted: (value) {
             if (value.isNotEmpty) {
               setState(() => widget.consumedBy.add(value));
@@ -226,7 +228,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.buttonColor)),
+      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.buttonColor, year2023: false,)),
     );
     try {
       final repository = AppRepository();
@@ -278,7 +280,13 @@ class _EditBillScreenState extends State<EditBillScreen> {
                   onTap: _isOcrProcessing ? null : _onOcrTap,
                 ),
                 verticalSpace(20),
-                CommonTextField(label: 'PAID BY', hintText: 'enter name', controller: _paidByController),
+                CommonTextField(
+                  label: 'PAID BY',
+                  hintText: 'enter name',
+                  controller: _paidByController,
+                  textCapitalization: TextCapitalization.words,
+                  keyboardType: TextInputType.name,
+                ),
                 verticalSpace(20),
                 CommonTextField(
                   label: 'AMOUNT PAID',
@@ -400,6 +408,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
               hintText: 'item name',
               controller: _formData.items[index].nameController,
               onChanged: (value) => _formData.items[index].name = value,
+              textCapitalization: TextCapitalization.words,
+              keyboardType: TextInputType.name,
             ),
             verticalSpace(10),
             Row(
