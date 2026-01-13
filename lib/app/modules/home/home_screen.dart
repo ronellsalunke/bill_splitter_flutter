@@ -1,6 +1,8 @@
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
@@ -55,7 +57,14 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                         verticalSpace(10),
-                        CommonButton(text: 'calculate split', mainAxisSize: MainAxisSize.max, onTap: () {}),
+                        CommonButton(
+                          text: 'calculate split',
+                          mainAxisSize: MainAxisSize.max,
+                          onTap: () {
+                            context.read<PaymentPlansBloc>().add(CalculateSplit((state as BillLoaded).bills));
+                            context.pushNamed('payment-plans');
+                          },
+                        ),
                       ],
                     ),
                   ),
