@@ -1,6 +1,5 @@
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_state.dart';
-import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/extensions/extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
@@ -23,7 +22,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
       body: BlocBuilder<PaymentPlansBloc, PaymentPlansState>(
         builder: (context, state) {
           if (state is PaymentPlansLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.buttonColor, year2023: false));
+            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary, year2023: false));
           } else if (state is PaymentPlansError) {
             return Center(child: Text(state.message));
           } else if (state is PaymentPlansLoaded) {
@@ -33,7 +32,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                 final plan = state.splitModel.paymentPlans![index];
                 final totalOwed = plan?.payments?.fold(0.0, (sum, p) => sum + (p?.amount ?? 0)) ?? 0;
                 return Container(
-                  decoration: const BoxDecoration(color: Colors.white, border: Border()),
+                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border()),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -46,7 +45,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                           children: [const Text('owes'), Text('₹${totalOwed.toStringAsFixed(2)}')],
                         ),
                         verticalSpace(8),
-                        const DottedLine(dashLength: 6, dashColor: AppColors.dividerColor),
+                        DottedLine(dashLength: 6, dashColor: Theme.of(context).colorScheme.onSurface),
                         verticalSpace(8),
                         ...?plan?.payments?.map(
                           (p) => Row(

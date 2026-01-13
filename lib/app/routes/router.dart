@@ -16,6 +16,6 @@ final GoRouter router = GoRouter(
         return EditBillScreen(billId: id);
       },
     ),
-    GoRoute(name: 'payment-plans', path: '/payment-plans', builder: (context, state) => const PaymentPlansScreen())
+    GoRoute(name: 'payment-plans', path: '/payment-plans', builder: (context, state) => const PaymentPlansScreen()),
   ],
 );

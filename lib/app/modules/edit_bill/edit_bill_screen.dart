@@ -4,7 +4,6 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
-import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
@@ -67,9 +66,9 @@ class _NameChipsFieldState extends State<NameChipsField> {
                   (entry) => Chip(
                     shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
                     side: BorderSide.none,
-                    label: Text(entry.value, style: const TextStyle(color: AppColors.buttonTextColor)),
-                    backgroundColor: AppColors.buttonColor,
-                    deleteIcon: const Icon(Icons.close, size: 16, color: AppColors.buttonTextColor),
+                    label: Text(entry.value, style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
+                    backgroundColor: Theme.of(context).colorScheme.secondary,
+                    deleteIcon: Icon(Icons.close, size: 16, color: Theme.of(context).colorScheme.onSecondary),
                     onDeleted: () => setState(() => widget.consumedBy.removeAt(entry.key)),
                   ),
                 )
@@ -228,7 +227,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator(color: AppColors.buttonColor, year2023: false,)),
+      builder: (context) =>
+          Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary, year2023: false)),
     );
     try {
       final repository = AppRepository();
@@ -325,10 +325,11 @@ class _EditBillScreenState extends State<EditBillScreen> {
             ).paddingSymmetric(horizontal: 16),
           ),
           bottomNavigationBar: Container(
-            decoration: const BoxDecoration(
-              color: AppColors.backgroundColor,
-              border: Border(top: BorderSide(color: Colors.black, width: 1)),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: 1)),
             ),
+
             padding: const EdgeInsets.all(16),
             child: SafeArea(
               child: Column(
@@ -394,13 +395,13 @@ class _EditBillScreenState extends State<EditBillScreen> {
       direction: DismissDirection.endToStart,
       onDismissed: (direction) => setState(() => _formData.items.removeAt(index)),
       background: Container(
-        color: AppColors.errorColor,
+        color: Theme.of(context).colorScheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
         child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       child: Container(
-        decoration: BoxDecoration(color: Colors.white, border: Border.all()),
+        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border.all()),
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [

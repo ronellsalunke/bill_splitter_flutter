@@ -65,12 +65,12 @@ class CommonTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Default colors
-    final defaultLabelColor = labelColor ?? const Color(0xFF374151); // Dark slate grey
-    final defaultHintColor = hintColor ?? const Color(0xFF6B7280); // Medium grey
-    final defaultInputColor = inputTextColor ?? const Color(0xFF121212); // Near black
-    final defaultBorderColor = borderColor ?? const Color(0xFF787878); // Deep navy/near-black
-    final defaultCursorColor = cursorColor ?? const Color(0xFF111827);
-    final focusedBorderColor = cursorColor ?? const Color(0xFF121212);
+    final defaultLabelColor = labelColor ?? Theme.of(context).colorScheme.onSurface; // Dark slate grey
+    final defaultHintColor = hintColor ?? Theme.of(context).colorScheme.onSurface; // Medium grey
+    final defaultInputColor = inputTextColor ?? Theme.of(context).colorScheme.onSurface; // Near black
+    final defaultBorderColor = borderColor ?? Theme.of(context).colorScheme.onSurface; // Deep navy/near-black
+    final defaultCursorColor = cursorColor ?? Theme.of(context).colorScheme.primary;
+    final focusedBorderColor = cursorColor ?? Theme.of(context).colorScheme.primary;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

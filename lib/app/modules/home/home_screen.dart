@@ -4,7 +4,6 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
 import 'package:bs_flutter/app/models/bill.dart';
-import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
@@ -32,16 +31,24 @@ class _HomeScreenState extends State<HomeScreen> {
         final bool hasBills = state is BillLoaded && state.bills.isNotEmpty;
         return Scaffold(
           appBar: AppBar(
-            leading: SvgPicture.asset(AppIcons.logoIcon).paddingOnly(left: 16),
+            leading: SvgPicture.asset(AppIcons.logoIcon, color: Theme.of(context).colorScheme.primary).paddingOnly(left: 16),
             leadingWidth: 48,
             title: const Text('bill splitter'),
             centerTitle: false,
+            actions: [
+              IconButton(
+                onPressed: () {
+                  context.pushNamed('settings');
+                },
+                icon: const Icon(Icons.settings_outlined),
+              ),
+            ],
           ),
           bottomNavigationBar: hasBills
               ? Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.backgroundColor,
-                    border: Border(top: BorderSide(color: Colors.black, width: 1)),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: 1)),
                   ),
                   padding: const EdgeInsets.all(16),
                   child: SafeArea(
@@ -112,9 +119,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppIcons.logoIcon, color: AppColors.hintColor, width: 60, height: 60),
+        SvgPicture.asset(AppIcons.logoIcon, color: Theme.of(context).colorScheme.outline, width: 60, height: 60),
         verticalSpace(12),
-        const Text('no bills yet', style: TextStyle(color: AppColors.hintColor)),
+        Text('no bills yet', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
         verticalSpace(24),
 
         DottedButton(
@@ -134,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
       key: ValueKey(bill.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: AppColors.errorColor,
+        color: Theme.of(context).colorScheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         child: const Icon(Icons.delete_outline, color: Colors.white),
@@ -152,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
       clipper: ReceiptClipper(),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
         ),
 
@@ -174,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             verticalSpace(8),
-            const DottedLine(dashLength: 6, dashColor: AppColors.dividerColor),
+            DottedLine(dashLength: 6, dashColor: Theme.of(context).colorScheme.onSurface),
             verticalSpace(8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

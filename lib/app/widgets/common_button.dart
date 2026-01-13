@@ -1,4 +1,3 @@
-import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:flutter/material.dart';
 
@@ -47,8 +46,8 @@ class CommonButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final defaultIconColor = iconColor ?? Theme.of(context).iconTheme.color;
-    final defaultTextColor = textColor ?? AppColors.buttonTextColor;
-    final bgColor = backgroundColor ?? AppColors.buttonColor;
+    final defaultTextColor = textColor ?? Theme.of(context).colorScheme.onPrimary;
+    final bgColor = backgroundColor ?? Theme.of(context).colorScheme.primary;
 
     return ElevatedButton(
       onPressed: enabled ? onTap : null,

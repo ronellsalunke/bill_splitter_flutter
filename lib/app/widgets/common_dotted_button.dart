@@ -48,10 +48,15 @@ class DottedButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final defaultIconColor = iconColor ?? Theme.of(context).iconTheme.color;
     final defaultTextColor = textColor ?? Theme.of(context).textTheme.bodyLarge?.color;
-    final bgColor = backgroundColor ?? Colors.white;
+    final bgColor = backgroundColor ?? Theme.of(context).colorScheme.onSecondary;
 
     return DottedBorder(
-      options: const RoundedRectDottedBorderOptions(radius: Radius.circular(0), dashPattern: [6, 4], padding: EdgeInsets.all(1)),
+      options: RoundedRectDottedBorderOptions(
+        radius: Radius.circular(0),
+        dashPattern: [6, 4],
+        padding: EdgeInsets.all(1),
+        color: Theme.of(context).colorScheme.onSurface,
+      ),
       child: OutlinedButton(
         onPressed: enabled ? onTap : null,
         style: OutlinedButton.styleFrom(
