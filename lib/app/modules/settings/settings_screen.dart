@@ -1,6 +1,7 @@
 import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_event.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
+import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -24,7 +25,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text('theme', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                const SizedBox(height: 16),
+                verticalSpace(16),
                 SizedBox(
                   width: double.maxFinite,
                   child: SegmentedButton<ThemeMode>(
@@ -53,35 +54,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     },
                   ),
                 ),
-                const SizedBox(height: 8),
+                verticalSpace(8),
                 SwitchListTile(
-                  // thumb icon
+                  contentPadding: const EdgeInsets.all(0),
                   title: const Text('dynamic colors', style: TextStyle(fontSize: 14)),
                   value: state.dynamicColorEnabled,
+                  thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                    if (states.contains(WidgetState.selected)) {
+                      return const Icon(Icons.check);
+                    }
+                    return const Icon(Icons.close);
+                  }),
                   onChanged: (value) {
                     context.read<ThemeBloc>().add(ToggleDynamicColor(value));
                   },
                 ),
-                // const SizedBox(height: 16),
-                // const Text(
-                //   'About',
-                //   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                // ),
-                // const SizedBox(height: 16),
-                // ListTile(
-                //   leading: Icon(
-                //     Icons.code,
-                //     color: Theme.of(context).colorScheme.primary,
-                //   ),
-                //   title: const Text('Source Code'),
-                //   onTap: () {
-                //     launchUrl(
-                //       Uri.parse(
-                //         'https://github.com/ronellsalunke/',
-                //       ),
-                //     );
-                //   },
-                // ),
               ],
             ),
           );
