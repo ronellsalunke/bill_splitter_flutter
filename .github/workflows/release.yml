@@ -116,6 +116,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Send APK to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          curl -F chat_id="${TELEGRAM_CHAT_ID}" \
+               -F document=@"build/app/outputs/flutter-apk/bill-splitter-v${{ steps.version.outputs.VERSION }}-arm64.apk" \
+               -F caption="Bill Splitter v${{ steps.version.outputs.VERSION }}
+          What's Changed:
+          ${{ steps.changelog.outputs.CHANGELOG }}" \
+               https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument          
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
