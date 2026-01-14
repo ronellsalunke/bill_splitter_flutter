@@ -1,0 +1,99 @@
+name: TG Channel Upload
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version from tag
+        id: version
+        run: |
+          VERSION=$(grep "^version:" pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Decode and save keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/bill-splitter-keystore.jks
+
+      - name: Create key.properties
+        env:
+          KEY_STORE_PASSWORD: ${{ secrets.KEY_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          cat > android/key.properties << EOF
+          storePassword=$KEY_STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=../bill-splitter-keystore.jks
+          EOF
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Run build_runner
+        run: dart run build_runner build
+
+      - name: Build Android APK (arm64-v8a)
+        run: flutter build apk --release --target-platform android-arm64
+
+      - name: Rename APK
+        run: |
+          mv build/app/outputs/flutter-apk/app-release.apk \
+             build/app/outputs/flutter-apk/bill-splitter-v${{ steps.version.outputs.VERSION }}-arm64.apk
+
+      - name: Send APK to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          RESPONSE=$(curl -s -F chat_id="${TELEGRAM_CHAT_ID}" \
+               -F document=@"build/app/outputs/flutter-apk/bill-splitter-v${{ steps.version.outputs.VERSION }}-arm64.apk" \
+               -F caption="Bill Splitter v${{ steps.version.outputs.VERSION }}" \
+               https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument)
+          
+          echo "$RESPONSE"
+          
+          # Check if upload was successful
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "Successfully uploaded to Telegram"
+          else
+            echo "Failed to upload to Telegram"
+            echo "$RESPONSE"
+            exit 1
+          fi
+
+      - name: Cleanup keystore
+        if: always()
+        run: |
+          rm -f android/bill-splitter-keystore.jks
+          rm -f android/key.properties
