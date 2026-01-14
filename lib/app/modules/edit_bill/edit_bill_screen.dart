@@ -422,7 +422,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
         color: Theme.of(context).colorScheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete_outline, color: Colors.white),
+        child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onError),
       ),
       child: Container(
         decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border.all()),

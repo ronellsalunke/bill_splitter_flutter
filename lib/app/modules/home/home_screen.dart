@@ -144,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Theme.of(context).colorScheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(Icons.delete_outline, color: Colors.white),
+        child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onError),
       ),
       onDismissed: (direction) {
         HapticFeedback.lightImpact();
