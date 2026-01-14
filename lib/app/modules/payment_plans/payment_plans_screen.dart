@@ -1,11 +1,14 @@
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_state.dart';
+import 'package:bs_flutter/app/models/split/split_model.dart';
 import 'package:bs_flutter/extensions/extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
+import 'package:bs_flutter/utils/payment_plan_exporter.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PaymentPlansScreen extends StatefulWidget {
   const PaymentPlansScreen({super.key});
@@ -15,10 +18,26 @@ class PaymentPlansScreen extends StatefulWidget {
 }
 
 class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
+  void _sharePaymentPlans(SplitModel splitModel) {
+    final content = PaymentPlanExporter.exportToText(splitModel);
+    SharePlus.instance.share(ShareParams(text: content, subject: 'Payment Plans'));
+  }
+
+  AppBar _buildAppBar(BuildContext context, PaymentPlansState state) {
+    return AppBar(
+      title: const Text('payment plans'),
+      centerTitle: false,
+      actions: [
+        if (state is PaymentPlansLoaded && state.splitModel.paymentPlans != null && state.splitModel.paymentPlans!.isNotEmpty)
+          IconButton(icon: const Icon(Icons.share_outlined), onPressed: () => _sharePaymentPlans(state.splitModel)),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('payment plans'), centerTitle: false),
+      appBar: _buildAppBar(context, context.watch<PaymentPlansBloc>().state),
       body: BlocBuilder<PaymentPlansBloc, PaymentPlansState>(
         builder: (context, state) {
           if (state is PaymentPlansLoading) {
