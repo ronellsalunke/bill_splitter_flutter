@@ -40,6 +40,7 @@ class NameChipsField extends StatefulWidget {
 
 class _NameChipsFieldState extends State<NameChipsField> {
   final _controller = TextEditingController();
+  final _focusNode = FocusNode();
 
   @override
   Widget build(BuildContext context) {
@@ -51,11 +52,13 @@ class _NameChipsFieldState extends State<NameChipsField> {
           label: 'consumed by',
           controller: _controller,
           textCapitalization: TextCapitalization.words,
+          currentFocus: _focusNode,
           keyboardType: TextInputType.name,
           onFieldSubmitted: (value) {
             if (value.isNotEmpty) {
               setState(() => widget.consumedBy.add(value));
               _controller.clear();
+              _focusNode.requestFocus();
             }
           },
         ),
@@ -87,6 +90,7 @@ class _NameChipsFieldState extends State<NameChipsField> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 }
