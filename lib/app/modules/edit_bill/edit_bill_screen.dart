@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
@@ -8,6 +10,7 @@ import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
+import 'package:bs_flutter/utils/share_intent_service.dart';
 import 'package:bs_flutter/utils/utility.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
@@ -16,9 +19,11 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
 class EditBillScreen extends StatefulWidget {
-  const EditBillScreen({super.key, required this.billId});
+  const EditBillScreen({super.key, required this.billId, this.sharedOcrModel, this.fromShare = false});
 
   final String billId;
+  final OcrModel? sharedOcrModel;
+  final bool fromShare;
 
   @override
   State<EditBillScreen> createState() => _EditBillScreenState();
@@ -128,6 +133,12 @@ class _EditBillScreenState extends State<EditBillScreen> {
           context.goNamed('home');
         }
       }
+      if (widget.sharedOcrModel != null) {
+        _populateFromOcr(widget.sharedOcrModel!);
+      }
+      if (widget.fromShare) {
+        _processSharedImage();
+      }
     });
   }
 
@@ -215,6 +226,18 @@ class _EditBillScreenState extends State<EditBillScreen> {
       return;
     }
 
+    await _processOcr(image);
+  }
+
+  Future<void> _processSharedImage() async {
+    final path = ShareIntentService.sharedImagePath;
+    if (path == null) return;
+
+    final image = File(path);
+    await _processOcr(image, isShared: true);
+  }
+
+  Future<void> _processOcr(File image, {bool isShared = false}) async {
     final hasConnection = await Utility.hasInternetConnection();
     if (!hasConnection) {
       ScaffoldMessenger.of(
@@ -243,6 +266,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
       }
     } finally {
       await image.delete();
+      if (isShared) ShareIntentService.sharedImagePath = null;
       setState(() => _isOcrProcessing = false);
       if (mounted) {
         Navigator.of(context).pop(); // dismiss loading dialog

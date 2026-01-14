@@ -14,6 +14,7 @@ import 'package:hive_ce/hive.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'hive_registrar.g.dart';
+import 'utils/share_intent_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,8 @@ void main() async {
   Hive.init(appDocumentDir.path);
   Hive.registerAdapters();
   final billBox = await Hive.openBox<Bill>('bills');
+  ShareIntentService.initialize();
+
   runApp(MyApp(billBox: billBox));
 }
 
