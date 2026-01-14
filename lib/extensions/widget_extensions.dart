@@ -231,36 +231,4 @@ extension WidgetExtension on Widget? {
       ),
     );
   }
-
-  /// Shimmer Loading
-  // Widget shimmerLoading({double? radius}){
-  //   return Shimmer.fromColors(
-  //     baseColor: shimmerBaseColor,
-  //     highlightColor: shimmerHighlightColor,
-  //     child: Container(color: Colors.white, child: this!).cornerRadiusWithClipRRect(radius ?? commonRadius),
-  //   );
-  // }
-  //
-  /// Animate
-  // Widget isAnimate() {
-  //   return Animate(
-  //     effects: fadeAnimation,
-  //     child: this!,
-  //   );
-  // }
-
-  /// Dropdown View
-  // Widget dropdownDecoration(){
-  //   return Container(
-  //     height: 50,
-  //     width: double.infinity,
-  //     decoration: BoxDecoration(
-  //         color: textFieldFillColor,
-  //         borderRadius: BorderRadius.circular(commonRadius),
-  //         border: Border.all(color: borderColor, width: 1)
-  //     ),
-  //     padding: const EdgeInsets.only(left: 10, top: 3, bottom: 3, right: 17),
-  //     child: this!,
-  //   );
-  // }
 }

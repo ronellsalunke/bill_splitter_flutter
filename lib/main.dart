@@ -52,9 +52,9 @@ class _MyAppState extends State<MyApp> {
       colorScheme: colorScheme,
       useMaterial3: true,
       fontFamily: 'jetbrains_mono',
-      scaffoldBackgroundColor: brightness == Brightness.light ? AppColors.backgroundColor : Colors.black,
+      scaffoldBackgroundColor: brightness == Brightness.light ? AppColors.backgroundColorLight : AppColors.backgroundColorDark,
       appBarTheme: AppBarTheme(
-        backgroundColor: brightness == Brightness.light ? AppColors.backgroundColor : Colors.black,
+        backgroundColor: brightness == Brightness.light ? AppColors.backgroundColorLight : AppColors.backgroundColorDark,
         elevation: 0,
         centerTitle: true,
         scrolledUnderElevation: 0,
