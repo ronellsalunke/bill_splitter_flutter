@@ -10,12 +10,23 @@ import 'package:bs_flutter/app/models/split_request/split_request_model.dart';
 import 'package:dio/dio.dart';
 
 class AppRepository {
-  final BaseApiServices _apiServices = NetworkApiService();
+  final BaseApiServices _apiServices;
+  final Future<MultipartFile> Function(String path, String filename)? _multipartFileFactory;
+
+  AppRepository({
+    BaseApiServices? apiServices,
+    Future<MultipartFile> Function(String path, String filename)? multipartFileFactory,
+  }) : _apiServices = apiServices ?? NetworkApiService(),
+       _multipartFileFactory = multipartFileFactory;
 
   Future<OcrModel> processReceipt(File image) async {
     try {
       final url = Endpoints.ocr;
-      final formData = FormData.fromMap({'file': await MultipartFile.fromFile(image.path, filename: 'receipt.jpg')});
+      final multipartFile = _multipartFileFactory != null
+          ? await _multipartFileFactory(image.path, 'receipt.jpg')
+          : await MultipartFile.fromFile(image.path, filename: 'receipt.jpg');
+
+      final formData = FormData.fromMap({'file': multipartFile});
       dynamic response = await _apiServices.getPostApiResponse(url, formData);
       return OcrModel.fromJson(response);
     } catch (e) {
