@@ -249,6 +249,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.8.1"
+  equatable:
+    dependency: "direct main"
+    description:
+      name: equatable
+      sha256: "3e0141505477fd8ad55d6eb4e7776d3fe8430be8e497ccb1521370c3f21a3e2b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.8"
   fake_async:
     dependency: transitive
     description:
@@ -404,10 +412,10 @@ packages:
     dependency: "direct main"
     description:
       name: hive_ce
-      sha256: "29f8791bf13fa6cf7435a58f1f82a7c9706973c867affa77c34d91e105762664"
+      sha256: b01cb16fc79cd4f63344d63f197d921eeb6c5bf1b5db6a21d0c21db0ec021516
       url: "https://pub.dev"
     source: hosted
-    version: "2.17.0"
+    version: "2.18.0"
   hive_ce_generator:
     dependency: "direct dev"
     description:
@@ -898,10 +906,10 @@ packages:
     dependency: transitive
     description:
       name: source_gen
-      sha256: "585bc140f20da42c584ece2df28f4d9ef2566955332b626f655957b3a8c8ad54"
+      sha256: "1d562a3c1f713904ebbed50d2760217fd8a51ca170ac4b05b0db490699dbac17"
       url: "https://pub.dev"
     source: hosted
-    version: "4.1.2"
+    version: "4.2.0"
   source_helper:
     dependency: transitive
     description:
@@ -1026,10 +1034,10 @@ packages:
     dependency: transitive
     description:
       name: url_launcher_web
-      sha256: "4bd2b7b4dc4d4d0b94e5babfffbca8eac1a126c7f3d6ecbc1a11013faa3abba2"
+      sha256: d0412fcf4c6b31ecfdb7762359b7206ffba3bbffd396c6d9f9c4616ece476c1f
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.1"
+    version: "2.4.2"
   url_launcher_windows:
     dependency: transitive
     description:
