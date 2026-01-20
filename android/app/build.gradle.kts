@@ -49,6 +49,7 @@ android {
         debug {
             isMinifyEnabled = false
             applicationIdSuffix = ".dev"
+            manifestPlaceholders["appLabel"] = "Bill Splitter DEV"
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -57,6 +58,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            manifestPlaceholders["appLabel"] = "Bill Splitter"
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
