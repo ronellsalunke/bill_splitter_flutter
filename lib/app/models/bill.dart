@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'bill.g.dart';
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 @HiveType(typeId: 0)
 class Bill extends HiveObject {
   @HiveField(0)
@@ -36,7 +36,7 @@ class Bill extends HiveObject {
   Map<String, dynamic> toJson() => _$BillToJson(this);
 }
 
-@JsonSerializable()
+@JsonSerializable(explicitToJson: true)
 @HiveType(typeId: 1)
 class BillItem extends HiveObject {
   @HiveField(0)
