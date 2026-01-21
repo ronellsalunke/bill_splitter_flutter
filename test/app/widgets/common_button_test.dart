@@ -1,6 +1,5 @@
 import 'package:bs_flutter/app/widgets/common_button.dart';
-import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
-import 'package:dotted_border/dotted_border.dart';
+import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -36,7 +35,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: DottedButton(
+          body: CommonOutlineButton(
             text: 'Test Button',
             onTap: () {
               pressed = true;
@@ -47,7 +46,7 @@ void main() {
     );
 
     expect(find.text('Test Button'), findsOneWidget);
-    expect(find.byType(DottedBorder), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsOneWidget);
 
     await tester.tap(find.byType(OutlinedButton));
     expect(pressed, true);

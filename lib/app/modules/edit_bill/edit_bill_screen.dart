@@ -7,8 +7,9 @@ import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
-import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
+import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
+import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
 import 'package:bs_flutter/utils/utility.dart';
@@ -27,90 +28,6 @@ class EditBillScreen extends StatefulWidget {
 
   @override
   State<EditBillScreen> createState() => _EditBillScreenState();
-}
-
-class NameChipsField extends StatefulWidget {
-  const NameChipsField({super.key, required this.consumedBy});
-
-  final List<String> consumedBy;
-
-  @override
-  State<NameChipsField> createState() => _NameChipsFieldState();
-}
-
-class _NameChipsFieldState extends State<NameChipsField> {
-  final _controller = TextEditingController();
-  final _focusNode = FocusNode();
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CommonTextField(
-          hintText: 'add names',
-          label: 'consumed by',
-          controller: _controller,
-          textCapitalization: TextCapitalization.words,
-          currentFocus: _focusNode,
-          keyboardType: TextInputType.name,
-          onFieldSubmitted: (value) {
-            if (value.isNotEmpty) {
-              setState(() => widget.consumedBy.add(value));
-              _controller.clear();
-              _focusNode.requestFocus();
-            }
-          },
-        ),
-        verticalSpace(8),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: Wrap(
-            spacing: 8,
-            children: widget.consumedBy
-                .asMap()
-                .entries
-                .map(
-                  (entry) => Chip(
-                    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.zero),
-                    side: BorderSide.none,
-                    label: Text(entry.value, style: TextStyle(color: Theme.of(context).colorScheme.onSecondary)),
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                    deleteIcon: Icon(Icons.close, size: 16, color: Theme.of(context).colorScheme.onSecondary),
-                    onDeleted: () => setState(() => widget.consumedBy.removeAt(entry.key)),
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-}
-
-class _ItemFormData {
-  String name = '';
-  double price = 0.0;
-  int quantity = 1;
-  List<String> consumedBy = [];
-  TextEditingController nameController = TextEditingController();
-  TextEditingController priceController = TextEditingController();
-  TextEditingController quantityController = TextEditingController(text: '1');
-}
-
-class _BillFormData {
-  String paidBy = '';
-  double amount = 0.0;
-  double tax = 5.0;
-  double service = 0.0;
-  List<_ItemFormData> items = [_ItemFormData()];
 }
 
 class _EditBillScreenState extends State<EditBillScreen> {
@@ -195,30 +112,42 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   Future<void> _onOcrTap() async {
+    final colorScheme = context.colorScheme;
     final source = await showModalBottomSheet<ImageSource>(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       context: context,
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.photo_library_outlined, size: 24),
-              title: const Text('Gallery', style: TextStyle(fontSize: 14)),
-              onTap: () => context.pop(ImageSource.gallery),
-            ),
-            ListTile(
-              leading: const Icon(Icons.camera_alt_outlined, size: 24),
-              title: const Text('Camera', style: TextStyle(fontSize: 14)),
-              onTap: () => context.pop(ImageSource.camera),
-            ),
-            const Divider(),
-            ListTile(
-              title: const Text('Cancel', textAlign: TextAlign.center),
-              onTap: () => context.pop(),
-            ),
-          ],
+        child: SafeArea(
+          child: Row(
+            children: [
+              Flexible(
+                child: CommonButton(
+                  borderRadius: 8,
+                  text: 'gallery',
+                  icon: Icons.photo_library_rounded,
+                  iconColor: colorScheme.onPrimary,
+                  mainAxisSize: MainAxisSize.max,
+                  onTap: () {
+                    context.pop(ImageSource.gallery);
+                  },
+                ),
+              ),
+              horizontalSpace(10),
+              Flexible(
+                child: CommonButton(
+                  borderRadius: 8,
+                  icon: Icons.camera_alt_rounded,
+                  iconColor: colorScheme.onPrimary,
+                  text: 'camera',
+                  mainAxisSize: MainAxisSize.max,
+                  onTap: () {
+                    context.pop(ImageSource.camera);
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -242,6 +171,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   Future<void> _processOcr(File image, {bool isShared = false}) async {
+    final colorScheme = context.colorScheme;
+
     final hasConnection = await Utility.hasInternetConnection();
     if (!hasConnection) {
       ScaffoldMessenger.of(
@@ -254,8 +185,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) =>
-          Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary, year2023: false)),
+      builder: (context) => Center(child: CircularProgressIndicator(color: colorScheme.primary, year2023: false)),
     );
     try {
       final repository = AppRepository();
@@ -280,6 +210,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
     return BlocConsumer<BillBloc, BillState>(
       listener: (context, state) {
         if (widget.billId != 'new' && state is BillLoaded) {
@@ -301,9 +232,11 @@ class _EditBillScreenState extends State<EditBillScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 verticalSpace(12),
-                DottedButton(
-                  text: _isOcrProcessing ? 'Processing...' : 'upload receipt (OCR)',
-                  icon: _isOcrProcessing ? null : Icons.file_upload_outlined,
+                CommonButton(
+                  text: _isOcrProcessing ? 'Processing...' : 'scan receipt',
+                  icon: _isOcrProcessing ? null : Icons.document_scanner_rounded,
+                  iconColor: colorScheme.onPrimary,
+                  borderRadius: 8,
                   mainAxisSize: MainAxisSize.max,
                   onTap: _isOcrProcessing ? null : _onOcrTap,
                 ),
@@ -353,27 +286,36 @@ class _EditBillScreenState extends State<EditBillScreen> {
             ).paddingSymmetric(horizontal: 16),
           ),
           bottomNavigationBar: Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: 1)),
-            ),
+            decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
 
             padding: const EdgeInsets.all(16),
             child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+              child: Row(
                 children: [
-                  DottedButton(
-                    text: 'add item',
-                    icon: Icons.add,
-                    mainAxisSize: MainAxisSize.max,
-                    onTap: () {
-                      setState(() => _formData.items.add(_ItemFormData()));
-                      _listKey.currentState?.insertItem(_formData.items.length - 1);
-                    },
+                  Flexible(
+                    child: CommonOutlineButton(
+                      text: 'add item',
+                      icon: Icons.add_circle,
+                      iconColor: colorScheme.primary,
+                      mainAxisSize: MainAxisSize.max,
+                      borderRadius: 8,
+                      onTap: () {
+                        setState(() => _formData.items.add(_ItemFormData()));
+                        _listKey.currentState?.insertItem(_formData.items.length - 1);
+                      },
+                    ),
                   ),
-                  verticalSpace(10),
-                  CommonButton(text: 'save bill', mainAxisSize: MainAxisSize.max, onTap: _saveBill),
+                  horizontalSpace(10),
+                  Flexible(
+                    child: CommonButton(
+                      text: 'save bill',
+                      mainAxisSize: MainAxisSize.max,
+                      borderRadius: 8,
+                      icon: Icons.save,
+                      iconColor: colorScheme.onPrimary,
+                      onTap: _saveBill,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -418,18 +360,19 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   Widget itemCard(int index) {
+    final colorScheme = context.colorScheme;
     return Dismissible(
       key: ObjectKey(_formData.items[index]),
       direction: DismissDirection.endToStart,
       onDismissed: (direction) => setState(() => _formData.items.removeAt(index)),
       background: Container(
-        color: Theme.of(context).colorScheme.error,
+        decoration: BoxDecoration(color: colorScheme.error),
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 16),
-        child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onError),
+        child: Icon(Icons.delete_outline, color: colorScheme.onError),
       ),
       child: Container(
-        decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border.all()),
+        decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.all(10),
         child: Column(
           children: [
@@ -469,4 +412,89 @@ class _EditBillScreenState extends State<EditBillScreen> {
       ),
     ).paddingSymmetric(vertical: 4);
   }
+}
+
+class NameChipsField extends StatefulWidget {
+  const NameChipsField({super.key, required this.consumedBy});
+
+  final List<String> consumedBy;
+
+  @override
+  State<NameChipsField> createState() => _NameChipsFieldState();
+}
+
+class _NameChipsFieldState extends State<NameChipsField> {
+  final _controller = TextEditingController();
+  final _focusNode = FocusNode();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CommonTextField(
+          hintText: 'add names',
+          label: 'consumed by',
+          controller: _controller,
+          textCapitalization: TextCapitalization.words,
+          currentFocus: _focusNode,
+          keyboardType: TextInputType.name,
+          onFieldSubmitted: (value) {
+            if (value.isNotEmpty) {
+              setState(() => widget.consumedBy.add(value));
+              _controller.clear();
+              _focusNode.requestFocus();
+            }
+          },
+        ),
+        verticalSpace(8),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxHeight: 200),
+          child: Wrap(
+            spacing: 8,
+            children: widget.consumedBy
+                .asMap()
+                .entries
+                .map(
+                  (entry) => Chip(
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    side: BorderSide.none,
+                    label: Text(entry.value, style: TextStyle(color: colorScheme.onSecondary)),
+                    backgroundColor: colorScheme.secondary,
+                    deleteIcon: Icon(Icons.close, size: 16, color: colorScheme.onSecondary),
+                    onDeleted: () => setState(() => widget.consumedBy.removeAt(entry.key)),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ItemFormData {
+  String name = '';
+  double price = 0.0;
+  int quantity = 1;
+  List<String> consumedBy = [];
+  TextEditingController nameController = TextEditingController();
+  TextEditingController priceController = TextEditingController();
+  TextEditingController quantityController = TextEditingController(text: '1');
+}
+
+class _BillFormData {
+  String paidBy = '';
+  double amount = 0.0;
+  double tax = 5.0;
+  double service = 0.0;
+  List<_ItemFormData> items = [_ItemFormData()];
 }

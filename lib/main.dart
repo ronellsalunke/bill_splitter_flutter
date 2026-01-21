@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
       colorScheme = dynamicColorScheme;
     } else {
       // fallback to default color scheme
-      colorScheme = ColorScheme.fromSeed(seedColor: Colors.white, brightness: brightness);
+      colorScheme = ColorScheme.fromSeed(seedColor: Colors.lightGreenAccent, brightness: brightness);
     }
 
     return ThemeData(
