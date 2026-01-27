@@ -6,7 +6,8 @@ import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
-import 'package:bs_flutter/app/widgets/common_dotted_button.dart';
+import 'package:bs_flutter/app/widgets/common_outline_button.dart';
+import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:dotted_line/dotted_line.dart';
@@ -26,12 +27,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
     return BlocBuilder<BillBloc, BillState>(
       builder: (context, state) {
         final bool hasBills = state is BillLoaded && state.bills.isNotEmpty;
         return Scaffold(
           appBar: AppBar(
-            leading: SvgPicture.asset(AppIcons.logoIcon, color: Theme.of(context).colorScheme.primary).paddingOnly(left: 16),
+            leading: SvgPicture.asset(AppIcons.logoIcon, color: colorScheme.primary).paddingOnly(left: 16),
             leadingWidth: 48,
             title: const Text('bill splitter'),
             centerTitle: false,
@@ -40,37 +42,42 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () {
                   context.pushNamed('settings');
                 },
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.settings_rounded),
               ),
             ],
           ),
           bottomNavigationBar: hasBills
               ? Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    border: Border(top: BorderSide(color: Theme.of(context).colorScheme.onSurface, width: 1)),
-                  ),
+                  decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.all(16),
                   child: SafeArea(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Row(
                       children: [
-                        DottedButton(
-                          text: 'add new bill',
-                          icon: Icons.add,
-                          mainAxisSize: MainAxisSize.max,
-                          onTap: () {
-                            context.pushNamed('bill', pathParameters: {'id': 'new'});
-                          },
+                        Flexible(
+                          child: CommonOutlineButton(
+                            borderRadius: 8,
+                            text: 'add bill',
+                            icon: Icons.add_circle_rounded,
+                            iconColor: colorScheme.primary,
+                            mainAxisSize: MainAxisSize.max,
+                            onTap: () {
+                              context.pushNamed('bill', pathParameters: {'id': 'new'});
+                            },
+                          ),
                         ),
-                        verticalSpace(10),
-                        CommonButton(
-                          text: 'calculate split',
-                          mainAxisSize: MainAxisSize.max,
-                          onTap: () {
-                            context.read<PaymentPlansBloc>().add(CalculateSplit((state as BillLoaded).bills));
-                            context.pushNamed('payment-plans');
-                          },
+                        horizontalSpace(10),
+                        Flexible(
+                          child: CommonButton(
+                            borderRadius: 8,
+                            icon: Icons.calculate_rounded,
+                            iconColor: colorScheme.onPrimary,
+                            text: 'split',
+                            mainAxisSize: MainAxisSize.max,
+                            onTap: () {
+                              context.read<PaymentPlansBloc>().add(CalculateSplit((state).bills));
+                              context.pushNamed('payment-plans');
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -116,17 +123,20 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAddNewBillButton() {
+    final colorScheme = context.colorScheme;
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppIcons.logoIcon, color: Theme.of(context).colorScheme.outline, width: 60, height: 60),
+        SvgPicture.asset(AppIcons.logoIcon, color: colorScheme.outline, width: 60, height: 60),
         verticalSpace(12),
-        Text('no bills yet', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
+        Text('no bills yet', style: TextStyle(color: colorScheme.outline)),
         verticalSpace(24),
 
-        DottedButton(
-          text: 'add new bill',
-          icon: Icons.add,
+        CommonOutlineButton(
+          borderRadius: 8,
+          text: 'add bill',
+          icon: Icons.add_circle_rounded,
+          iconColor: colorScheme.primary,
           mainAxisSize: MainAxisSize.max,
           onTap: () {
             context.pushNamed('bill', pathParameters: {'id': 'new'});
@@ -137,14 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _dismissibleBillCard(Bill bill) {
+    final colorScheme = context.colorScheme;
     return Dismissible(
       key: ValueKey(bill.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: Theme.of(context).colorScheme.error,
+        color: colorScheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onError),
+        child: Icon(Icons.delete_outline, color: colorScheme.onError),
       ),
       onDismissed: (direction) {
         HapticFeedback.lightImpact();
@@ -155,11 +166,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget billCard(Bill bill) {
+    final colorScheme = context.colorScheme;
     return ClipPath(
       clipper: ReceiptClipper(),
       child: Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
+          color: colorScheme.surface,
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
         ),
 
@@ -169,26 +181,44 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             const Text('PAID BY', style: TextStyle(fontSize: 12)),
             verticalSpace(8),
-            Text(bill.paidBy, style: const TextStyle(fontSize: 16)),
+            Text(bill.paidBy, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             verticalSpace(8),
             itemQtyWidget(bill.items),
             verticalSpace(8),
-            Row(
+            DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
+            verticalSpace(8),
+            Column(
               children: [
-                Text('tax: ${bill.tax}%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
-                horizontalSpace(8),
-                Text('service: ${bill.service}%', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text('tax', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                    Text('${bill.tax}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                  ],
+                ),
+                verticalSpace(8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                  children: [
+                    const Text('service', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                    Text('${bill.service}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                  ],
+                ),
               ],
             ),
             verticalSpace(8),
-            DottedLine(dashLength: 6, dashColor: Theme.of(context).colorScheme.onSurface),
+            DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
             verticalSpace(8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('total', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                const Text('TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 horizontalSpace(8),
-                Text('₹ ${bill.amount.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                Text(
+                  '₹ ${bill.amount.toStringAsFixed(2)}',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.primary),
+                ),
               ],
             ),
           ],
@@ -207,7 +237,9 @@ Widget itemQtyWidget(List<BillItem> items) {
           (item) => Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${item.quantity} x ${item.name}', style: const TextStyle(fontSize: 12)),
+              Flexible(child: Text(
+                '${item.quantity} x ${item.name}', style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis,)),
+              horizontalSpace(8),
               Text('₹ ${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
             ],
           ).paddingSymmetric(vertical: 4),

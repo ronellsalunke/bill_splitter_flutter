@@ -1,6 +1,8 @@
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_state.dart';
 import 'package:bs_flutter/app/models/split/split_model.dart';
+import 'package:bs_flutter/app/widgets/common_button.dart';
+import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/payment_plan_exporter.dart';
@@ -23,25 +25,15 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
     SharePlus.instance.share(ShareParams(text: content, subject: 'Payment Plans'));
   }
 
-  AppBar _buildAppBar(BuildContext context, PaymentPlansState state) {
-    return AppBar(
-      title: const Text('payment plans'),
-      centerTitle: false,
-      actions: [
-        if (state is PaymentPlansLoaded && state.splitModel.paymentPlans != null && state.splitModel.paymentPlans!.isNotEmpty)
-          IconButton(icon: const Icon(Icons.share_outlined), onPressed: () => _sharePaymentPlans(state.splitModel)),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final colorScheme = context.colorScheme;
     return Scaffold(
-      appBar: _buildAppBar(context, context.watch<PaymentPlansBloc>().state),
+      appBar: AppBar(title: const Text('payment plans'), centerTitle: false),
       body: BlocBuilder<PaymentPlansBloc, PaymentPlansState>(
         builder: (context, state) {
           if (state is PaymentPlansLoading) {
-            return Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary, year2023: false));
+            return Center(child: CircularProgressIndicator(color: colorScheme.primary, year2023: false));
           } else if (state is PaymentPlansError) {
             return Center(child: Text(state.message));
           } else if (state is PaymentPlansLoaded) {
@@ -51,26 +43,26 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                 final plan = state.splitModel.paymentPlans![index];
                 final totalOwed = plan?.payments?.fold(0.0, (sum, p) => sum + (p?.amount ?? 0)) ?? 0;
                 return Container(
-                  decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, border: Border()),
+                  decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(8)),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(plan?.name?.toCapitalized ?? '', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                        verticalSpace(10),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [const Text('owes'), Text('₹${totalOwed.toStringAsFixed(2)}')],
+                        Text(
+                          '${plan?.name?.toCapitalized ?? ''} owes ₹${totalOwed.toStringAsFixed(2)}',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
+                        verticalSpace(10),
+                        DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
                         verticalSpace(8),
-                        DottedLine(dashLength: 6, dashColor: Theme.of(context).colorScheme.onSurface),
+                        const Text('to be paid to:'),
                         verticalSpace(8),
                         ...?plan?.payments?.map(
                           (p) => Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text('→ ${p?.to?.toCapitalized}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                              Text('${p?.to?.toCapitalized}', style: const TextStyle(fontWeight: FontWeight.w600)),
                               Text('₹${p?.amount?.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600)),
                             ],
                           ),
@@ -84,6 +76,29 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
           } else {
             return const SizedBox();
           }
+        },
+      ),
+      bottomNavigationBar: BlocBuilder<PaymentPlansBloc, PaymentPlansState>(
+        builder: (context, state) {
+          return Container(
+            decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
+            padding: const EdgeInsets.all(16),
+            child: SafeArea(
+              child: CommonButton(
+                borderRadius: 8,
+                icon: Icons.share_rounded,
+                iconColor: colorScheme.onPrimary,
+                text: 'share',
+                mainAxisSize: MainAxisSize.max,
+                onTap:
+                    (state is PaymentPlansLoaded &&
+                        state.splitModel.paymentPlans != null &&
+                        state.splitModel.paymentPlans!.isNotEmpty)
+                    ? () => _sharePaymentPlans(state.splitModel)
+                    : null,
+              ),
+            ),
+          );
         },
       ),
     );
