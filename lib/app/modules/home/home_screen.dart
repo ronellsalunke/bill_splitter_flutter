@@ -237,7 +237,9 @@ Widget itemQtyWidget(List<BillItem> items) {
           (item) => Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('${item.quantity} x ${item.name}', style: const TextStyle(fontSize: 12)),
+              Flexible(child: Text(
+                '${item.quantity} x ${item.name}', style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis,)),
+              horizontalSpace(8),
               Text('₹ ${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
             ],
           ).paddingSymmetric(vertical: 4),
