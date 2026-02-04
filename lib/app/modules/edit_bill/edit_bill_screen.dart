@@ -51,7 +51,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
           _populateFormFromBill(bills.first);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill not found')));
-          context.goNamed('home');
+          context.pop();
         }
       }
       if (widget.sharedOcrModel != null) {
@@ -219,7 +219,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
             _populateFormFromBill(bills.first);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill not found')));
-            context.goNamed('home');
+            context.pop();
           }
         }
       },
@@ -356,7 +356,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     } else {
       context.read<BillBloc>().add(UpdateBill(bill));
     }
-    context.goNamed('home');
+    context.pop();
   }
 
   Widget itemCard(int index) {
