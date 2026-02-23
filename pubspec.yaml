@@ -8,6 +8,7 @@ environment:
   sdk: ^3.10.4
 
 dependencies:
+  sentry_flutter: ^9.12.0
   flutter:
     sdk: flutter
 
@@ -32,9 +33,11 @@ dependencies:
       url: https://github.com/KasemJaffer/receive_sharing_intent.git
       ref: master
   share_plus: ^12.0.1
+  flutter_dotenv: ^6.0.0
 
 
 dev_dependencies:
+  sentry_dart_plugin: ^3.2.1
   flutter_test:
     sdk: flutter
 
@@ -45,8 +48,8 @@ dev_dependencies:
   build_runner: ^2.10.4
   #  bloc_test: ^10.0.0
   mocktail: ^1.0.4
-#  integration_test:
-#    sdk: flutter
+  #  integration_test:
+  #    sdk: flutter
 
 flutter:
   uses-material-design: true
@@ -59,3 +62,9 @@ flutter:
       fonts:
         - asset: assets/fonts/JetBrainsMono-VariableFont_wght.ttf
           weight: 400
+
+sentry:
+  upload_debug_symbols: true
+  upload_source_maps: true
+  project: flutter
+  org: ronell-salunke
