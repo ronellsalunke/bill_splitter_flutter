@@ -51,7 +51,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
           _populateFormFromBill(bills.first);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill not found')));
-          context.goNamed('home');
+          context.pop();
         }
       }
       if (widget.sharedOcrModel != null) {
@@ -219,7 +219,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
             _populateFormFromBill(bills.first);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill not found')));
-            context.goNamed('home');
+            context.pop();
           }
         }
       },
@@ -356,7 +356,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     } else {
       context.read<BillBloc>().add(UpdateBill(bill));
     }
-    context.goNamed('home');
+    context.pop();
   }
 
   Widget itemCard(int index) {
@@ -406,18 +406,35 @@ class _EditBillScreenState extends State<EditBillScreen> {
               ],
             ),
             verticalSpace(10),
-            NameChipsField(consumedBy: _formData.items[index].consumedBy),
+            NameChipsField(
+              consumedBy: _formData.items[index].consumedBy,
+              allMembers: _getAllInvolvedNames().toList(),
+              onMemberChange: () => setState(() {}),
+            ),
           ],
         ),
       ),
     ).paddingSymmetric(vertical: 4);
   }
+
+  Set<String> _getAllInvolvedNames() {
+    final names = <String>{};
+    if (_paidByController.text.isNotEmpty) {
+      names.add(_paidByController.text.trim());
+    }
+    for (var item in _formData.items) {
+      names.addAll(item.consumedBy);
+    }
+    return names;
+  }
 }
 
 class NameChipsField extends StatefulWidget {
-  const NameChipsField({super.key, required this.consumedBy});
+  const NameChipsField({super.key, required this.consumedBy, required this.allMembers, this.onMemberChange});
 
   final List<String> consumedBy;
+  final List<String> allMembers;
+  final VoidCallback? onMemberChange;
 
   @override
   State<NameChipsField> createState() => _NameChipsFieldState();
@@ -450,6 +467,7 @@ class _NameChipsFieldState extends State<NameChipsField> {
           onFieldSubmitted: (value) {
             if (value.isNotEmpty) {
               setState(() => widget.consumedBy.add(value));
+              widget.onMemberChange?.call();
               _controller.clear();
               _focusNode.requestFocus();
             }
@@ -470,12 +488,39 @@ class _NameChipsFieldState extends State<NameChipsField> {
                     label: Text(entry.value, style: TextStyle(color: colorScheme.onSecondary)),
                     backgroundColor: colorScheme.secondary,
                     deleteIcon: Icon(Icons.close, size: 16, color: colorScheme.onSecondary),
-                    onDeleted: () => setState(() => widget.consumedBy.removeAt(entry.key)),
+                    onDeleted: () {
+                      setState(() => widget.consumedBy.removeAt(entry.key));
+                      widget.onMemberChange?.call();
+                    },
                   ),
                 )
                 .toList(),
           ),
         ),
+
+        if (widget.allMembers.isNotEmpty) ...[
+          verticalSpace(8),
+          Row(
+            children: [
+              Checkbox(
+                value: widget.allMembers.every((m) => widget.consumedBy.contains(m)),
+                onChanged: (value) {
+                  setState(() {
+                    if (value == true) {
+                      final newNames = widget.allMembers.where((m) => !widget.consumedBy.contains(m));
+                      widget.consumedBy.addAll(newNames);
+                    } else {
+                      widget.consumedBy.clear();
+                    }
+                    widget.onMemberChange?.call();
+                  });
+                },
+                visualDensity: VisualDensity.compact,
+              ),
+              const Text('Consumed by all', style: TextStyle(fontSize: 12)),
+            ],
+          ),
+        ],
       ],
     );
   }
