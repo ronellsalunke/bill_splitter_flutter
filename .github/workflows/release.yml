@@ -83,7 +83,7 @@ jobs:
         id: changelog
         run: |
           # Get commits since last tag
-          PREV_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+          PREV_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           if [ -z "$PREV_TAG" ]; then
             CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
           else
@@ -103,6 +103,7 @@ jobs:
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git v${{ steps.version.outputs.VERSION }}
 
       - name: Create GitHub Release
+        id: create_release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.VERSION }}
@@ -121,12 +122,22 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          curl -F chat_id="${TELEGRAM_CHAT_ID}" \
+          CAPTION=$(printf "Bill Splitter v${{ steps.version.outputs.VERSION }}\n\nRelease Notes: ${{ steps.create_release.outputs.url }}")
+          RESPONSE=$(curl -s -F chat_id="${TELEGRAM_CHAT_ID}" \
                -F document=@"build/app/outputs/flutter-apk/bill-splitter-v${{ steps.version.outputs.VERSION }}-arm64.apk" \
-               -F caption="Bill Splitter v${{ steps.version.outputs.VERSION }}
-          What's Changed:
-          ${{ steps.changelog.outputs.CHANGELOG }}" \
-               https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument          
+               -F caption="$CAPTION" \
+               https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument)
+
+          echo "$RESPONSE"
+
+          # Check if upload was successful
+          if echo "$RESPONSE" | grep -q '"ok":true'; then
+            echo "Successfully uploaded to Telegram"
+          else
+            echo "Failed to upload to Telegram"
+            echo "$RESPONSE"
+            exit 1
+          fi          
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
