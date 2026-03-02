@@ -8,6 +8,7 @@ import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/routes/router.dart';
 import 'package:dynamic_color/dynamic_color.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce/hive.dart';
@@ -25,8 +26,8 @@ void main() async {
   final billBox = await Hive.openBox<Bill>('bills');
   ShareIntentService.initialize();
 
-  await SentryFlutter.init(
-        (options) {
+  if (kReleaseMode) {
+    await SentryFlutter.init((options) {
       options.dsn = 'https://d5dbaa502a559be188b80989244146f8@o4510867834732544.ingest.us.sentry.io/4510867835781120';
       // Adds request headers and IP for users, for more info visit:
       // https://docs.sentry.io/platforms/dart/guides/flutter/data-management/data-collected/
@@ -38,9 +39,10 @@ void main() async {
       // Configure Session Replay
       options.replay.sessionSampleRate = 0.1;
       options.replay.onErrorSampleRate = 1.0;
-    },
-    appRunner: () => runApp(SentryWidget(child: MyApp(billBox: billBox))),
-  );
+    }, appRunner: () => runApp(SentryWidget(child: MyApp(billBox: billBox))));
+  } else {
+    runApp(MyApp(billBox: billBox));
+  }
 }
 
 class MyApp extends StatefulWidget {
