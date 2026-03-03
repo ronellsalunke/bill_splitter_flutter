@@ -1,33 +1,56 @@
 import 'package:bs_flutter/app/models/split/split_model.dart';
+import 'package:bs_flutter/extensions/extensions.dart';
 
 class PaymentPlanExporter {
-  /// Exports payment plans to plain text format
   static String exportToText(SplitModel splitModel) {
-    final buffer = StringBuffer();
-    buffer.writeln('Payment Plans\n');
-
     if (splitModel.paymentPlans == null || splitModel.paymentPlans!.isEmpty) {
-      buffer.writeln('No payment plans available.');
-      return buffer.toString();
+      return 'No payment plans available.';
     }
+
+    // Map format: Map<Payee, List<MapEntry<Payer, Amount>>>
+    final Map<String, List<MapEntry<String, double>>> payeesMap = {};
 
     for (final plan in splitModel.paymentPlans!) {
-      if (plan == null) continue;
+      if (plan == null || plan.name == null) continue;
 
-      final totalOwed = plan.payments?.fold(0.0, (sum, p) => sum + (p?.amount ?? 0)) ?? 0;
-      buffer.writeln(plan.name ?? 'Unnamed Plan');
-      buffer.writeln('Total owed: ₹${totalOwed.toStringAsFixed(2)}\n');
+      final payer = plan.name!.trim();
 
-      if (plan.payments != null && plan.payments!.isNotEmpty) {
-        buffer.writeln('Payments:');
+      if (plan.payments != null) {
         for (final payment in plan.payments!) {
-          if (payment == null) continue;
-          buffer.writeln('  → ${payment.to ?? 'Unknown'} : ₹${payment.amount?.toStringAsFixed(2) ?? '0.00'}');
+          if (payment == null || payment.to == null || payment.amount == null) {
+            continue;
+          }
+
+          final payee = payment.to!.trim();
+          final amount = payment.amount!;
+
+          if (payee.isNotEmpty && amount > 0) {
+            payeesMap.putIfAbsent(payee, () => []).add(MapEntry(payer, amount));
+          }
         }
       }
-      buffer.writeln('---\n');
     }
 
-    return buffer.toString();
+    if (payeesMap.isEmpty) {
+      return 'No pending payments.';
+    }
+
+    final buffer = StringBuffer();
+
+    payeesMap.forEach((payee, pairs) {
+      buffer.writeln('To pay ${payee.toCapitalized}:');
+
+      for (final pair in pairs) {
+        final payer = pair.key.toCapitalized;
+        final amountString = pair.value == pair.value.truncateToDouble()
+            ? pair.value.toInt().toString()
+            : pair.value.toStringAsFixed(2);
+
+        buffer.writeln('$payer → ₹$amountString');
+      }
+      buffer.writeln();
+    });
+
+    return buffer.toString().trimRight();
   }
 }
