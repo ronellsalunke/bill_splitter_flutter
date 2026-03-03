@@ -4,13 +4,15 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class ShareIntentService {
   static String? sharedImagePath;
+  static bool _pendingShareIntent = false;
 
   static Future<void> initialize() async {
     // Handle initial shared media when app is launched from share
     ReceiveSharingIntent.instance.getInitialMedia().then((List<SharedMediaFile> files) {
       if (files.isNotEmpty) {
         sharedImagePath = files.first.path;
-        _navigateToEditBill(fromShare: true);
+        _pendingShareIntent = true;
+        _tryNavigate();
       }
       ReceiveSharingIntent.instance.reset();
     });
@@ -22,6 +24,20 @@ class ShareIntentService {
         _navigateToEditBill(fromShare: true);
       }
     });
+  }
+
+  static void checkPendingShareIntent() {
+    if (_pendingShareIntent) {
+      _tryNavigate();
+    }
+  }
+
+  static void _tryNavigate() {
+    final context = rootNavigatorKey.currentContext;
+    if (context != null) {
+      _pendingShareIntent = false;
+      GoRouter.of(context).pushNamed('bill', pathParameters: {'id': 'new'}, extra: {'fromShare': true});
+    }
   }
 
   static void _navigateToEditBill({bool fromShare = false}) {
