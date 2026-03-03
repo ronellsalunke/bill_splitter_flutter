@@ -7,6 +7,8 @@ import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
+import 'package:bs_flutter/app/widgets/common_dropdown.dart';
+import 'package:bs_flutter/app/widgets/common_multi_dropdown.dart';
 import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
@@ -18,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:multi_dropdown/multi_dropdown.dart';
 
 class EditBillScreen extends StatefulWidget {
   const EditBillScreen({super.key, required this.billId, this.sharedOcrModel, this.fromShare = false});
@@ -32,12 +35,16 @@ class EditBillScreen extends StatefulWidget {
 
 class _EditBillScreenState extends State<EditBillScreen> {
   final _formData = _BillFormData();
-  final _paidByController = TextEditingController();
   final _amountController = TextEditingController();
   final _taxController = TextEditingController(text: '5.0');
   final _serviceController = TextEditingController();
   final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   bool _isOcrProcessing = false;
+
+  // Track participants globally for the bill
+  final List<String> _participants = [];
+  final _participantsController = TextEditingController();
+  final _participantsFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -64,7 +71,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   void _populateFormFromBill(Bill bill) {
-    _paidByController.text = bill.paidBy;
+    _refreshParticipantsFromBill(bill);
+    _formData.paidBy = bill.paidBy;
     _amountController.text = bill.amount.toString();
     _taxController.text = bill.tax.toString();
     _serviceController.text = bill.service.toString();
@@ -77,11 +85,28 @@ class _EditBillScreenState extends State<EditBillScreen> {
         ..consumedBy = List<String>.from(item.consumedBy)
         ..nameController.text = item.name
         ..priceController.text = item.price.toString()
-        ..quantityController.text = item.quantity.toString();
+        ..quantityController.text = item.quantity.toString()
+        ..consumedByController.setItems(_participants.map((m) => DropdownItem(label: m, value: m)).toList());
+
+      formItem.consumedByController.selectWhere((i) => item.consumedBy.contains(i.value));
+
       _formData.items.add(formItem);
     }
     // Trigger rebuild for AnimatedList
     setState(() {});
+  }
+
+  void _refreshParticipantsFromBill(Bill bill) {
+    final names = <String>{};
+    if (bill.paidBy.isNotEmpty) {
+      names.add(bill.paidBy.trim());
+    }
+    for (var item in bill.items) {
+      names.addAll(item.consumedBy.map((n) => n.trim()));
+    }
+
+    _participants.clear();
+    _participants.addAll(names.where((n) => n.isNotEmpty));
   }
 
   void _populateFromOcr(OcrModel model) {
@@ -98,7 +123,9 @@ class _EditBillScreenState extends State<EditBillScreen> {
             ..consumedBy = []
             ..nameController.text = item.name ?? ''
             ..priceController.text = (item.price ?? 0).toString()
-            ..quantityController.text = (item.quantity ?? 1).toString();
+            ..quantityController.text = (item.quantity ?? 1).toString()
+            ..consumedByController.setItems(_participants.map((m) => DropdownItem(label: m, value: m)).toList());
+
           _formData.items.add(formItem);
         }
       }
@@ -209,6 +236,31 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   @override
+  void dispose() {
+    _participantsController.dispose();
+    _participantsFocusNode.dispose();
+    for (var item in _formData.items) {
+      item.consumedByController.dispose();
+    }
+    super.dispose();
+  }
+
+  void _syncDropdownModels() {
+    // Validate paidBy is still a valid participant
+    if (_formData.paidBy.isNotEmpty && !_participants.contains(_formData.paidBy)) {
+      _formData.paidBy = '';
+    }
+
+    for (var item in _formData.items) {
+      item.consumedBy.removeWhere((p) => !_participants.contains(p));
+      final dropdownItems = _participants.map((m) => DropdownItem(label: m, value: m)).toList();
+      item.consumedByController.setItems(dropdownItems);
+      item.consumedByController.selectWhere((element) => item.consumedBy.contains(element.value));
+    }
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
     return BlocConsumer<BillBloc, BillState>(
@@ -242,11 +294,64 @@ class _EditBillScreenState extends State<EditBillScreen> {
                 ),
                 verticalSpace(20),
                 CommonTextField(
-                  label: 'PAID BY',
-                  hintText: 'enter name',
-                  controller: _paidByController,
+                  hintText: 'add members',
+                  label: 'participants',
+                  controller: _participantsController,
                   textCapitalization: TextCapitalization.words,
+                  currentFocus: _participantsFocusNode,
                   keyboardType: TextInputType.name,
+                  onFieldSubmitted: (value) {
+                    final text = value.trim();
+                    if (text.isNotEmpty && !_participants.contains(text)) {
+                      setState(() {
+                        _participants.add(text);
+                        _syncDropdownModels();
+                      });
+                      _participantsController.clear();
+                      _participantsFocusNode.requestFocus();
+                    }
+                  },
+                ),
+                verticalSpace(8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 200),
+                  child: Wrap(
+                    spacing: 8,
+                    children: _participants
+                        .asMap()
+                        .entries
+                        .map(
+                          (entry) => Chip(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                            side: BorderSide.none,
+                            label: Text(entry.value, style: TextStyle(color: colorScheme.onSecondary)),
+                            backgroundColor: colorScheme.secondary,
+                            deleteIcon: Icon(Icons.close, size: 16, color: colorScheme.onSecondary),
+                            onDeleted: () {
+                              setState(() {
+                                _participants.removeAt(entry.key);
+                                _syncDropdownModels();
+                              });
+                            },
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ),
+                verticalSpace(20),
+                CommonDropdown<String>(
+                  label: 'PAID BY',
+                  hintText: 'select person',
+                  value: _participants.contains(_formData.paidBy) ? _formData.paidBy : null,
+                  items: _participants
+                      .map((name) => DropdownItem<String>(label: name, value: name))
+                      .map((item) => DropdownMenuItem<String>(value: item.value, child: Text(item.label)))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      if (value != null) _formData.paidBy = value;
+                    });
+                  },
                 ),
                 verticalSpace(20),
                 CommonTextField(
@@ -300,7 +405,11 @@ class _EditBillScreenState extends State<EditBillScreen> {
                       mainAxisSize: MainAxisSize.max,
                       borderRadius: 8,
                       onTap: () {
-                        setState(() => _formData.items.add(_ItemFormData()));
+                        setState(() {
+                          final item = _ItemFormData();
+                          item.consumedByController.setItems(_participants.map((m) => DropdownItem(label: m, value: m)).toList());
+                          _formData.items.add(item);
+                        });
                         _listKey.currentState?.insertItem(_formData.items.length - 1);
                       },
                     ),
@@ -327,7 +436,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
   void _saveBill() {
     // Validate
-    if (_paidByController.text.isEmpty ||
+    if (_formData.paidBy.isEmpty ||
         _amountController.text.isEmpty ||
         double.tryParse(_amountController.text) == null ||
         _formData.items.isEmpty ||
@@ -343,7 +452,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
     final bill = Bill(
       id: widget.billId == 'new' ? DateTime.now().millisecondsSinceEpoch.toString() : widget.billId,
-      paidBy: _paidByController.text,
+      paidBy: _formData.paidBy,
       amount: double.parse(_amountController.text),
       tax: double.tryParse(_taxController.text) ?? 5.0,
       service: double.tryParse(_serviceController.text) ?? 0.0,
@@ -406,123 +515,46 @@ class _EditBillScreenState extends State<EditBillScreen> {
               ],
             ),
             verticalSpace(10),
-            NameChipsField(
-              consumedBy: _formData.items[index].consumedBy,
-              allMembers: _getAllInvolvedNames().toList(),
-              onMemberChange: () => setState(() {}),
+            CommonMultiDropdown<String>(
+              hintText: 'select participants',
+              label: 'consumed by',
+              items: _participants
+                  .map((m) => DropdownItem(label: m, value: m, selected: _formData.items[index].consumedBy.contains(m)))
+                  .toList(),
+              controller: _formData.items[index].consumedByController,
+              onSelectionChanged: (selectedItems) {
+                setState(() {
+                  _formData.items[index].consumedBy = List<String>.from(selectedItems);
+                });
+              },
             ),
+            if (_participants.isNotEmpty) ...[
+              verticalSpace(8),
+              Row(
+                children: [
+                  Checkbox(
+                    value: _participants.every((m) => _formData.items[index].consumedBy.contains(m)),
+                    onChanged: (value) {
+                      setState(() {
+                        if (value == true) {
+                          _formData.items[index].consumedBy = List<String>.from(_participants);
+                          _formData.items[index].consumedByController.selectAll();
+                        } else {
+                          _formData.items[index].consumedBy.clear();
+                          _formData.items[index].consumedByController.clearAll();
+                        }
+                      });
+                    },
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  const Text('Consumed by all', style: TextStyle(fontSize: 12)),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     ).paddingSymmetric(vertical: 4);
-  }
-
-  Set<String> _getAllInvolvedNames() {
-    final names = <String>{};
-    if (_paidByController.text.isNotEmpty) {
-      names.add(_paidByController.text.trim());
-    }
-    for (var item in _formData.items) {
-      names.addAll(item.consumedBy);
-    }
-    return names;
-  }
-}
-
-class NameChipsField extends StatefulWidget {
-  const NameChipsField({super.key, required this.consumedBy, required this.allMembers, this.onMemberChange});
-
-  final List<String> consumedBy;
-  final List<String> allMembers;
-  final VoidCallback? onMemberChange;
-
-  @override
-  State<NameChipsField> createState() => _NameChipsFieldState();
-}
-
-class _NameChipsFieldState extends State<NameChipsField> {
-  final _controller = TextEditingController();
-  final _focusNode = FocusNode();
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = context.colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        CommonTextField(
-          hintText: 'add names',
-          label: 'consumed by',
-          controller: _controller,
-          textCapitalization: TextCapitalization.words,
-          currentFocus: _focusNode,
-          keyboardType: TextInputType.name,
-          onFieldSubmitted: (value) {
-            if (value.isNotEmpty) {
-              setState(() => widget.consumedBy.add(value));
-              widget.onMemberChange?.call();
-              _controller.clear();
-              _focusNode.requestFocus();
-            }
-          },
-        ),
-        verticalSpace(8),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxHeight: 200),
-          child: Wrap(
-            spacing: 8,
-            children: widget.consumedBy
-                .asMap()
-                .entries
-                .map(
-                  (entry) => Chip(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    side: BorderSide.none,
-                    label: Text(entry.value, style: TextStyle(color: colorScheme.onSecondary)),
-                    backgroundColor: colorScheme.secondary,
-                    deleteIcon: Icon(Icons.close, size: 16, color: colorScheme.onSecondary),
-                    onDeleted: () {
-                      setState(() => widget.consumedBy.removeAt(entry.key));
-                      widget.onMemberChange?.call();
-                    },
-                  ),
-                )
-                .toList(),
-          ),
-        ),
-
-        if (widget.allMembers.isNotEmpty) ...[
-          verticalSpace(8),
-          Row(
-            children: [
-              Checkbox(
-                value: widget.allMembers.every((m) => widget.consumedBy.contains(m)),
-                onChanged: (value) {
-                  setState(() {
-                    if (value == true) {
-                      final newNames = widget.allMembers.where((m) => !widget.consumedBy.contains(m));
-                      widget.consumedBy.addAll(newNames);
-                    } else {
-                      widget.consumedBy.clear();
-                    }
-                    widget.onMemberChange?.call();
-                  });
-                },
-                visualDensity: VisualDensity.compact,
-              ),
-              const Text('Consumed by all', style: TextStyle(fontSize: 12)),
-            ],
-          ),
-        ],
-      ],
-    );
   }
 }
 
@@ -531,6 +563,7 @@ class _ItemFormData {
   double price = 0.0;
   int quantity = 1;
   List<String> consumedBy = [];
+  MultiSelectController<String> consumedByController = MultiSelectController<String>();
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   TextEditingController quantityController = TextEditingController(text: '1');
