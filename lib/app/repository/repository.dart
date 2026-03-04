@@ -2,7 +2,6 @@ import 'dart:io';
 
 import 'package:bs_flutter/app/data/base_api_services.dart';
 import 'package:bs_flutter/app/data/endpoints.dart';
-import 'package:bs_flutter/app/data/network_api_service.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/models/split/split_model.dart';
@@ -14,9 +13,9 @@ class AppRepository {
   final Future<MultipartFile> Function(String path, String filename)? _multipartFileFactory;
 
   AppRepository({
-    BaseApiServices? apiServices,
+    required BaseApiServices apiServices,
     Future<MultipartFile> Function(String path, String filename)? multipartFileFactory,
-  }) : _apiServices = apiServices ?? NetworkApiService(),
+  }) : _apiServices = apiServices,
        _multipartFileFactory = multipartFileFactory;
 
   Future<OcrModel> processReceipt(File image) async {

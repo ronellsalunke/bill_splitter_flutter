@@ -3,10 +3,10 @@ import 'package:go_router/go_router.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 class ShareIntentService {
-  static String? sharedImagePath;
-  static bool _pendingShareIntent = false;
+  String? sharedImagePath;
+  bool _pendingShareIntent = false;
 
-  static Future<void> initialize() async {
+  Future<void> initialize() async {
     // Handle initial shared media when app is launched from share
     ReceiveSharingIntent.instance.getInitialMedia().then((List<SharedMediaFile> files) {
       if (files.isNotEmpty) {
@@ -26,13 +26,13 @@ class ShareIntentService {
     });
   }
 
-  static void checkPendingShareIntent() {
+  void checkPendingShareIntent() {
     if (_pendingShareIntent) {
       _tryNavigate();
     }
   }
 
-  static void _tryNavigate() {
+  void _tryNavigate() {
     final context = rootNavigatorKey.currentContext;
     if (context != null) {
       _pendingShareIntent = false;
@@ -40,7 +40,7 @@ class ShareIntentService {
     }
   }
 
-  static void _navigateToEditBill({bool fromShare = false}) {
+  void _navigateToEditBill({bool fromShare = false}) {
     final context = rootNavigatorKey.currentContext;
     if (context != null) {
       GoRouter.of(context).pushNamed('bill', pathParameters: {'id': 'new'}, extra: fromShare ? {'fromShare': true} : null);

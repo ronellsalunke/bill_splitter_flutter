@@ -3,12 +3,14 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
+import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
+import 'package:bs_flutter/utils/share_intent_service.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
@@ -16,8 +18,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:bs_flutter/utils/share_intent_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ShareIntentService.checkPendingShareIntent();
+      getIt<ShareIntentService>().checkPendingShareIntent();
     });
   }
 
@@ -182,7 +182,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         decoration: BoxDecoration(
           color: colorScheme.surface,
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 6, offset: const Offset(0, 2))],
+          boxShadow: [BoxShadow(color: context.colorScheme.shadow, blurRadius: 6, offset: const Offset(0, 2))],
         ),
 
         padding: const EdgeInsets.all(12),

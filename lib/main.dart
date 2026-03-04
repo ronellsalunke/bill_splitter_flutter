@@ -3,8 +3,7 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
-import 'package:bs_flutter/app/models/bill.dart';
-import 'package:bs_flutter/app/repository/repository.dart';
+import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/routes/router.dart';
 import 'package:dynamic_color/dynamic_color.dart';
@@ -12,19 +11,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce/hive.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
 import 'hive_registrar.g.dart';
-import 'utils/share_intent_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final appDocumentDir = await getApplicationDocumentsDirectory();
-  Hive.init(appDocumentDir.path);
   Hive.registerAdapters();
-  final billBox = await Hive.openBox<Bill>('bills');
-  ShareIntentService.initialize();
+  await setupServiceLocator();
 
   if (kReleaseMode) {
     await SentryFlutter.init((options) {
@@ -39,16 +33,14 @@ void main() async {
       // Configure Session Replay
       options.replay.sessionSampleRate = 0.1;
       options.replay.onErrorSampleRate = 1.0;
-    }, appRunner: () => runApp(SentryWidget(child: MyApp(billBox: billBox))));
+    }, appRunner: () => runApp(const MyApp()));
   } else {
-    runApp(MyApp(billBox: billBox));
+    runApp(const MyApp());
   }
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, required this.billBox});
-
-  final Box<Bill> billBox;
+  const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -84,9 +76,9 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => BillBloc(widget.billBox)..add(LoadBills())),
-        BlocProvider(create: (context) => PaymentPlansBloc(AppRepository())),
-        BlocProvider(create: (context) => ThemeBloc()),
+        BlocProvider(create: (context) => getIt<BillBloc>()..add(LoadBills())),
+        BlocProvider(create: (context) => getIt<PaymentPlansBloc>()),
+        BlocProvider(create: (context) => getIt<ThemeBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {

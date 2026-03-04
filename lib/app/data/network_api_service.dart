@@ -1,10 +1,11 @@
 import 'package:bs_flutter/app/data/app_exceptions.dart';
 import 'package:bs_flutter/app/data/base_api_services.dart';
-import 'package:bs_flutter/app/data/dio_singleton.dart';
 import 'package:dio/dio.dart';
 
 class NetworkApiService extends BaseApiServices {
-  final Dio _dio = DioSingleton().dio;
+  final Dio _dio;
+
+  NetworkApiService(this._dio);
 
   @override
   Future getGetApiResponse(String url) async {

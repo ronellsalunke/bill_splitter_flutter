@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
+import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
@@ -190,7 +191,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   Future<void> _processSharedImage() async {
-    final path = ShareIntentService.sharedImagePath;
+    final path = getIt<ShareIntentService>().sharedImagePath;
     if (path == null) return;
 
     final image = File(path);
@@ -215,7 +216,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
       builder: (context) => Center(child: CircularProgressIndicator(color: colorScheme.primary, year2023: false)),
     );
     try {
-      final repository = AppRepository();
+      final repository = getIt<AppRepository>();
       final ocrModel = await repository.processReceipt(image);
       _populateFromOcr(ocrModel);
       if (mounted) {
@@ -227,7 +228,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
       }
     } finally {
       await image.delete();
-      if (isShared) ShareIntentService.sharedImagePath = null;
+      if (isShared) getIt<ShareIntentService>().sharedImagePath = null;
       setState(() => _isOcrProcessing = false);
       if (mounted) {
         Navigator.of(context).pop(); // dismiss loading dialog
