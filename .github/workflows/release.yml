@@ -71,12 +71,12 @@ jobs:
       - name: Run build_runner
         run: dart run build_runner build
 
-      - name: Build Android APK (arm64-v8a)
-        run: flutter build apk --release --target-platform android-arm64
+      - name: Build Android APK (arm64-v8a, 4kb page file size)
+        run: flutter build apk --target-platform android-arm64 --flavor ci --split-per-abi
 
       - name: Rename APK
         run: |
-          mv build/app/outputs/flutter-apk/app-release.apk \
+          mv build/app/outputs/flutter-apk/app-arm64-v8a-ci-release.apk \
              build/app/outputs/flutter-apk/bill-splitter-v${{ steps.version.outputs.VERSION }}-arm64.apk
 
       - name: Generate changelog

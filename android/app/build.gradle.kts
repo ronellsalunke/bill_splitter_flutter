@@ -35,6 +35,22 @@ android {
         keystoreProperties.load(FileInputStream(keystorePropertiesFile))
     }
 
+    flavorDimensions += "env"
+
+    productFlavors {
+        create("ci") {
+            dimension = "env"
+            packaging {
+                jniLibs {
+                    useLegacyPackaging = true
+                }
+            }
+        }
+        create("production") {
+            dimension = "env"
+        }
+    }
+
     signingConfigs {
         create("release") {
             keyAlias = keystoreProperties["keyAlias"] as String?
