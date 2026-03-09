@@ -7,6 +7,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 android {
     namespace = "com.ronell.billsplitter"
     compileSdk = flutter.compileSdkVersion
@@ -15,10 +19,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -35,19 +35,20 @@ android {
         keystoreProperties.load(FileInputStream(keystorePropertiesFile))
     }
 
-    flavorDimensions += "env"
+    flavorDimensions.add("env")
 
     productFlavors {
         create("ci") {
             dimension = "env"
-            packaging {
-                jniLibs {
-                    useLegacyPackaging = true
-                }
-            }
         }
         create("production") {
             dimension = "env"
+        }
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
         }
     }
 
