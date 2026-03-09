@@ -7,6 +7,8 @@ import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:material_segmented_list/material_segmented_list.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -17,6 +19,23 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  String _appVersion = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _initPackageInfo();
+  }
+
+  Future<void> _initPackageInfo() async {
+    final info = await PackageInfo.fromPlatform();
+    if (mounted) {
+      setState(() {
+        _appVersion = 'v${info.version}+${info.buildNumber}';
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
@@ -35,55 +54,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.primary),
                 ),
                 verticalSpace(16),
-                Container(
-                  decoration: BoxDecoration(color: colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(12)),
-                  width: double.maxFinite,
-                  padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                  child: SegmentedButton<ThemeMode>(
-                    style: ButtonStyle(
-                      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+                SegmentedListSection(
+                  children: [
+                    SegmentedListTile(
+                      leading: Icon(Icons.palette_rounded, color: context.colorScheme.primary),
+                      title: const Text('app theme', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      trailing: Text(
+                        state.themeMode.name,
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: context.colorScheme.primary),
+                      ),
+                      onTap: () {
+                        final ThemeMode nextMode;
+                        switch (state.themeMode) {
+                          case ThemeMode.system:
+                            nextMode = ThemeMode.light;
+                            break;
+                          case ThemeMode.light:
+                            nextMode = ThemeMode.dark;
+                            break;
+                          case ThemeMode.dark:
+                            nextMode = ThemeMode.system;
+                            break;
+                        }
+                        context.read<ThemeBloc>().add(ChangeThemeMode(nextMode));
+                      },
                     ),
-                    segments: const [
-                      ButtonSegment<ThemeMode>(
-                        value: ThemeMode.system,
-                        label: Text('system', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                        icon: Icon(Icons.brightness_auto),
+                    SegmentedListTile(
+                      leading: Icon(Icons.format_paint_rounded, color: context.colorScheme.primary),
+                      title: const Text('dynamic color', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      trailing: Switch(
+                        value: state.dynamicColorEnabled,
+                        onChanged: (value) {
+                          context.read<ThemeBloc>().add(ToggleDynamicColor(value));
+                        },
+                        thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                          if (states.contains(WidgetState.selected)) {
+                            return const Icon(Icons.check, size: 16);
+                          }
+                          return const Icon(Icons.close, size: 16);
+                        }),
                       ),
-                      ButtonSegment<ThemeMode>(
-                        value: ThemeMode.light,
-                        label: Text('light', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                        icon: Icon(Icons.light_mode),
-                      ),
-                      ButtonSegment<ThemeMode>(
-                        value: ThemeMode.dark,
-                        label: Text('dark', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500)),
-                        icon: Icon(Icons.dark_mode),
-                      ),
-                    ],
-                    selected: {state.themeMode},
-                    onSelectionChanged: (Set<ThemeMode> selection) {
-                      if (selection.isNotEmpty) {
-                        context.read<ThemeBloc>().add(ChangeThemeMode(selection.first));
-                      }
-                    },
-                  ),
-                ),
-                verticalSpace(12),
-                SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  title: const Text('dynamic colors', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  tileColor: colorScheme.surfaceContainer,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  value: state.dynamicColorEnabled,
-                  thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-                    if (states.contains(WidgetState.selected)) {
-                      return const Icon(Icons.check, size: 16);
-                    }
-                    return const Icon(Icons.close, size: 16);
-                  }),
-                  onChanged: (value) {
-                    context.read<ThemeBloc>().add(ToggleDynamicColor(value));
-                  },
+                      onTap: () {
+                        context.read<ThemeBloc>().add(ToggleDynamicColor(!state.dynamicColorEnabled));
+                      },
+                    ),
+                  ],
                 ),
                 verticalSpace(24),
                 Text(
@@ -91,13 +106,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: colorScheme.primary),
                 ),
                 verticalSpace(16),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  leading: SvgPicture.asset(AppIcons.githubIcon, height: 24, width: 24, color: colorScheme.primary),
-                  title: const Text('source code', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  tileColor: colorScheme.surfaceContainer,
-                  onTap: () => launchUrl(Uri.parse('https://github.com/ronellsalunke/bill_splitter_flutter')),
+                SegmentedListSection(
+                  children: [
+                    SegmentedListTile(
+                      leading: Icon(Icons.info_rounded, color: context.colorScheme.primary),
+                      title: Text(
+                        _appVersion.isEmpty ? 'loading...' : _appVersion,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                    SegmentedListTile(
+                      leading: SvgPicture.asset(AppIcons.githubIcon, height: 24, width: 24, color: colorScheme.primary),
+                      title: const Text('github', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      onTap: () => launchUrl(Uri.parse('https://github.com/ronellsalunke/bill_splitter_flutter')),
+                    ),
+                  ],
                 ),
               ],
             ),
