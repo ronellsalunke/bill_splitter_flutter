@@ -449,6 +449,11 @@ class _EditBillScreenState extends State<EditBillScreen> {
       return;
     }
 
+    if (double.tryParse(_amountController.text)! <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Amount must be greater than 0')));
+      return;
+    }
+
     // Create items
     final items = _formData.items
         .map((item) => BillItem(name: item.name, price: item.price, quantity: item.quantity, consumedBy: item.consumedBy))
