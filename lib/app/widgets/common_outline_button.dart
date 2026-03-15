@@ -1,5 +1,6 @@
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CommonOutlineButton extends StatelessWidget {
   final String text;
@@ -50,7 +51,12 @@ class CommonOutlineButton extends StatelessWidget {
     final bgColor = backgroundColor ?? Theme.of(context).colorScheme.onSecondary;
 
     return OutlinedButton(
-      onPressed: enabled ? onTap : null,
+      onPressed: enabled
+          ? () {
+              HapticFeedback.selectionClick();
+              onTap?.call();
+            }
+          : null,
       style: OutlinedButton.styleFrom(
         backgroundColor: bgColor,
         foregroundColor: defaultTextColor,

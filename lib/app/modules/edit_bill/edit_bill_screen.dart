@@ -18,6 +18,7 @@ import 'package:bs_flutter/utils/share_intent_service.dart';
 import 'package:bs_flutter/utils/utility.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -474,7 +475,10 @@ class _EditBillScreenState extends State<EditBillScreen> {
     return Dismissible(
       key: ObjectKey(_formData.items[index]),
       direction: DismissDirection.endToStart,
-      onDismissed: (direction) => setState(() => _formData.items.removeAt(index)),
+      onDismissed: (direction) => setState(() {
+        HapticFeedback.lightImpact();
+        _formData.items.removeAt(index);
+      }),
       background: Container(
         decoration: BoxDecoration(color: colorScheme.error),
         alignment: Alignment.centerRight,

@@ -1,5 +1,6 @@
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class CommonButton extends StatelessWidget {
   final String text;
@@ -50,7 +51,12 @@ class CommonButton extends StatelessWidget {
     final bgColor = backgroundColor ?? Theme.of(context).colorScheme.primary;
 
     return ElevatedButton(
-      onPressed: enabled ? onTap : null,
+      onPressed: enabled
+          ? () {
+              HapticFeedback.selectionClick();
+              onTap?.call();
+            }
+          : null,
       style: ElevatedButton.styleFrom(
         backgroundColor: bgColor,
         foregroundColor: defaultTextColor,

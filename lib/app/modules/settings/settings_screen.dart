@@ -5,6 +5,7 @@ import 'package:bs_flutter/app/res/app_icons.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
@@ -64,6 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: context.colorScheme.primary),
                       ),
                       onTap: () {
+                        HapticFeedback.selectionClick();
                         final ThemeMode nextMode;
                         switch (state.themeMode) {
                           case ThemeMode.system:
@@ -85,6 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       trailing: Switch(
                         value: state.dynamicColorEnabled,
                         onChanged: (value) {
+                          HapticFeedback.selectionClick();
                           context.read<ThemeBloc>().add(ToggleDynamicColor(value));
                         },
                         thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
@@ -95,6 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         }),
                       ),
                       onTap: () {
+                        HapticFeedback.selectionClick();
                         context.read<ThemeBloc>().add(ToggleDynamicColor(!state.dynamicColorEnabled));
                       },
                     ),
@@ -118,7 +122,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SegmentedListTile(
                       leading: SvgPicture.asset(AppIcons.githubIcon, height: 24, width: 24, color: colorScheme.primary),
                       title: const Text('github', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                      onTap: () => launchUrl(Uri.parse('https://github.com/ronellsalunke/bill_splitter_flutter')),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        launchUrl(Uri.parse('https://github.com/ronellsalunke/bill_splitter_flutter'));
+                      },
                     ),
                   ],
                 ),

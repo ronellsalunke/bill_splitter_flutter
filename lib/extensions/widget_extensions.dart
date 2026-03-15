@@ -1,28 +1,7 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-
-extension ClickListener on Widget {
-  Widget onClick(Function()? clickHandler) {
-    return GestureDetector(behavior: HitTestBehavior.opaque, onTap: debounce(clickHandler), child: this);
-  }
-}
-
-Null Function() debounce(Function? func, [int delay = 250]) {
-  Timer? timer;
-  return () {
-    if (timer != null) {
-      timer?.cancel();
-    }
-    timer = Timer(Duration(milliseconds: delay), () {
-      if (func != null) {
-        func();
-      }
-    });
-  };
-}
 
 extension WidgetExtension on Widget? {
   /// With custom height and width

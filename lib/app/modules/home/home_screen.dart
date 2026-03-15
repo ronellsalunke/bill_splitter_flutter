@@ -6,6 +6,7 @@ import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
+import 'package:bs_flutter/app/widgets/clickable.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
@@ -71,6 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             iconColor: colorScheme.primary,
                             mainAxisSize: MainAxisSize.max,
                             onTap: () {
+                              HapticFeedback.selectionClick();
                               context.pushNamed('bill', pathParameters: {'id': 'new'});
                             },
                           ),
@@ -84,6 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             text: 'split',
                             mainAxisSize: MainAxisSize.max,
                             onTap: () {
+                              HapticFeedback.selectionClick();
                               context.read<PaymentPlansBloc>().add(CalculateSplit((state).bills));
                               context.pushNamed('payment-plans');
                             },
@@ -149,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
           iconColor: colorScheme.primary,
           mainAxisSize: MainAxisSize.max,
           onTap: () {
+            HapticFeedback.selectionClick();
             context.pushNamed('bill', pathParameters: {'id': 'new'});
           },
         ),
@@ -177,66 +181,69 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget billCard(Bill bill) {
     final colorScheme = context.colorScheme;
-    return ClipPath(
-      clipper: ReceiptClipper(),
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          boxShadow: [BoxShadow(color: context.colorScheme.shadow, blurRadius: 6, offset: const Offset(0, 2))],
-        ),
+    return Clickable(
+      onClick: () {
+        context.pushNamed('bill', pathParameters: {'id': bill.id});
+      },
+      child: ClipPath(
+        clipper: ReceiptClipper(),
+        child: Container(
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            boxShadow: [BoxShadow(color: context.colorScheme.shadow, blurRadius: 6, offset: const Offset(0, 2))],
+          ),
 
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('PAID BY', style: TextStyle(fontSize: 12)),
-            verticalSpace(8),
-            Text(bill.paidBy, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            verticalSpace(8),
-            itemQtyWidget(bill.items),
-            verticalSpace(8),
-            DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
-            verticalSpace(8),
-            Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text('tax', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                    Text('${bill.tax}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                  ],
-                ),
-                verticalSpace(8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('PAID BY', style: TextStyle(fontSize: 12)),
+              verticalSpace(8),
+              Text(bill.paidBy, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              verticalSpace(8),
+              itemQtyWidget(bill.items),
+              verticalSpace(8),
+              DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
+              verticalSpace(8),
+              Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('tax', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                      Text('${bill.tax}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                    ],
+                  ),
+                  verticalSpace(8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
-                  children: [
-                    const Text('service', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                    Text('${bill.service}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                  ],
-                ),
-              ],
-            ),
-            verticalSpace(8),
-            DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
-            verticalSpace(8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text('TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                horizontalSpace(8),
-                Text(
-                  '₹ ${bill.amount.toStringAsFixed(2)}',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.primary),
-                ),
-              ],
-            ),
-          ],
+                    children: [
+                      const Text('service', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                      Text('${bill.service}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                    ],
+                  ),
+                ],
+              ),
+              verticalSpace(8),
+              DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
+              verticalSpace(8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  horizontalSpace(8),
+                  Text(
+                    '₹ ${bill.amount.toStringAsFixed(2)}',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.primary),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
-    ).onClick(() {
-      context.pushNamed('bill', pathParameters: {'id': bill.id});
-    });
+    );
   }
 }
 
