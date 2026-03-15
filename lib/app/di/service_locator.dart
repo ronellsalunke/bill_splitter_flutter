@@ -27,7 +27,13 @@ Future<void> setupServiceLocator() async {
   getIt.registerSingleton<SharedPreferences>(prefs);
 
   getIt.registerLazySingleton<Dio>(() {
-    final dio = Dio(BaseOptions(connectTimeout: const Duration(minutes: 2), receiveTimeout: const Duration(minutes: 2)));
+    final dio = Dio(
+      BaseOptions(
+        connectTimeout: const Duration(minutes: 2),
+        sendTimeout: const Duration(minutes: 2),
+        receiveTimeout: const Duration(minutes: 2),
+      ),
+    );
     dio.interceptors.add(
       PrettyDioLogger(
         requestHeader: true,
