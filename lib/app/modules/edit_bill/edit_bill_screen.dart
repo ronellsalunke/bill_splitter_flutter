@@ -241,6 +241,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
   void dispose() {
     _participantsController.dispose();
     _participantsFocusNode.dispose();
+    _amountController.dispose();
+    _serviceController.dispose();
     for (var item in _formData.items) {
       item.consumedByController.dispose();
     }
