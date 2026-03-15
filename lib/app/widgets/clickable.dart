@@ -20,7 +20,6 @@ class _ClickableState extends State<Clickable> {
   void _handleTap() {
     if (_timer?.isActive ?? false) return; // leading-edge debounce
     HapticFeedback.selectionClick();
-    print('click');
     widget.onClick?.call();
     _timer = Timer(Duration(milliseconds: widget.debounceMs), () {});
   }
