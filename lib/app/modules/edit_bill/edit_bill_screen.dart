@@ -80,7 +80,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     _amountController.text = bill.amount.toString();
     _taxController.text = bill.tax.toString();
     _serviceController.text = bill.service.toString();
-    _disposeAllItemControllers();
+    final previousItems = List<_ItemFormData>.from(_formData.items);
     _formData.items.clear();
     for (var item in bill.items) {
       var formItem = _ItemFormData()
@@ -99,6 +99,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     }
     // Trigger rebuild for AnimatedList
     setState(() {});
+    _disposeItemsNextFrame(previousItems);
   }
 
   void _refreshParticipantsFromBill(Bill bill) {
@@ -116,7 +117,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
   void _populateFromOcr(OcrModel model) {
     // Clear existing items
-    _disposeAllItemControllers();
+    final previousItems = List<_ItemFormData>.from(_formData.items);
     _formData.items.clear();
     // Populate items
     if (model.items != null) {
@@ -142,6 +143,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     _serviceController.text = ((model.serviceCharge ?? 0.00) * 100).toString();
     // Trigger rebuild
     setState(() {});
+    _disposeItemsNextFrame(previousItems);
   }
 
   Future<void> _onOcrTap() async {
@@ -256,6 +258,15 @@ class _EditBillScreenState extends State<EditBillScreen> {
     for (final item in _formData.items) {
       item.dispose();
     }
+  }
+
+  void _disposeItemsNextFrame(List<_ItemFormData> items) {
+    if (items.isEmpty) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      for (final item in items) {
+        item.dispose();
+      }
+    });
   }
 
   void _syncDropdownModels() {
@@ -460,6 +471,11 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
     if (double.tryParse(_amountController.text)! <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Amount must be greater than 0')));
+      return;
+    }
+
+    if (_formData.items.any((item) => item.price <= 0)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Item price must be greater than 0')));
       return;
     }
 
