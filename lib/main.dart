@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce/hive.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:quick_actions/quick_actions.dart';
 
 import 'hive_registrar.g.dart';
