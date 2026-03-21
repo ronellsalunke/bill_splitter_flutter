@@ -11,9 +11,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_ce/hive.dart';
-import 'package:sentry_flutter/sentry_flutter.dart';
+import 'package:quick_actions/quick_actions.dart';
 
 import 'hive_registrar.g.dart';
+
+const _newBillShortcutType = 'new_bill_shortcut';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,7 +48,72 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  final QuickActions _quickActions = const QuickActions();
+  DateTime? _lastShortcutHandledAt;
+  AppLifecycleState _appLifecycleState = AppLifecycleState.resumed;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeQuickActions();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appLifecycleState = state;
+  }
+
+  Future<void> _initializeQuickActions() async {
+    if (defaultTargetPlatform != TargetPlatform.android) {
+      return;
+    }
+
+    await _quickActions.initialize((type) {
+      if (type != _newBillShortcutType) {
+        return;
+      }
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _openNewBillFromShortcut(fromBackground: _appLifecycleState != AppLifecycleState.resumed);
+      });
+    });
+
+    await _quickActions.setShortcutItems([
+      const ShortcutItem(type: _newBillShortcutType, localizedTitle: 'New Bill', icon: 'ic_add'),
+    ]);
+  }
+
+  void _openNewBillFromShortcut({required bool fromBackground}) {
+    final now = DateTime.now();
+    final lastHandledAt = _lastShortcutHandledAt;
+
+    if (fromBackground && lastHandledAt != null && now.difference(lastHandledAt) < const Duration(seconds: 2)) {
+      return;
+    }
+
+    if (lastHandledAt != null && now.difference(lastHandledAt) < const Duration(milliseconds: 900)) {
+      return;
+    }
+
+    final currentConfig = router.routerDelegate.currentConfiguration;
+    final currentPath = currentConfig.matches.isNotEmpty ? currentConfig.matches.last.matchedLocation : currentConfig.uri.path;
+
+    if (currentPath.startsWith('/bill/')) {
+      return;
+    }
+
+    _lastShortcutHandledAt = now;
+    router.pushNamed('bill', pathParameters: {'id': 'new'});
+  }
+
   ThemeData _buildTheme(Brightness brightness, bool dynamicColors, ColorScheme? dynamicColorScheme) {
     ColorScheme colorScheme;
 

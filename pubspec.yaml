@@ -37,6 +37,7 @@ dependencies:
   get_it: ^9.2.1
   material_segmented_list: ^1.0.5
   package_info_plus: ^9.0.0
+  quick_actions: ^1.1.0
 
 
 dev_dependencies:
