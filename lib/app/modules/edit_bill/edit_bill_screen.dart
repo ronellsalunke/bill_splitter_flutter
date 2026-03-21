@@ -47,6 +47,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
   final List<String> _participants = [];
   final _participantsController = TextEditingController();
   final _participantsFocusNode = FocusNode();
+  DateTime? _existingCreatedAt;
 
   @override
   void initState() {
@@ -73,11 +74,13 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   void _populateFormFromBill(Bill bill) {
+    _existingCreatedAt = bill.createdAt;
     _refreshParticipantsFromBill(bill);
     _formData.paidBy = bill.paidBy;
     _amountController.text = bill.amount.toString();
     _taxController.text = bill.tax.toString();
     _serviceController.text = bill.service.toString();
+    _disposeAllItemControllers();
     _formData.items.clear();
     for (var item in bill.items) {
       var formItem = _ItemFormData()
@@ -113,6 +116,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
   void _populateFromOcr(OcrModel model) {
     // Clear existing items
+    _disposeAllItemControllers();
     _formData.items.clear();
     // Populate items
     if (model.items != null) {
@@ -242,11 +246,16 @@ class _EditBillScreenState extends State<EditBillScreen> {
     _participantsController.dispose();
     _participantsFocusNode.dispose();
     _amountController.dispose();
+    _taxController.dispose();
     _serviceController.dispose();
-    for (var item in _formData.items) {
-      item.consumedByController.dispose();
-    }
+    _disposeAllItemControllers();
     super.dispose();
+  }
+
+  void _disposeAllItemControllers() {
+    for (final item in _formData.items) {
+      item.dispose();
+    }
   }
 
   void _syncDropdownModels() {
@@ -466,7 +475,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
       tax: double.tryParse(_taxController.text) ?? 5.0,
       service: double.tryParse(_serviceController.text) ?? 0.0,
       items: items,
-      createdAt: widget.billId == 'new' ? DateTime.now() : DateTime.now(), // or keep original, but since no original, use now
+      createdAt: widget.billId == 'new' ? DateTime.now() : (_existingCreatedAt ?? DateTime.now()),
     );
 
     if (widget.billId == 'new') {
@@ -484,7 +493,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
       direction: DismissDirection.endToStart,
       onDismissed: (direction) => setState(() {
         HapticFeedback.lightImpact();
-        _formData.items.removeAt(index);
+        final removedItem = _formData.items.removeAt(index);
+        removedItem.dispose();
       }),
       background: Container(
         decoration: BoxDecoration(color: colorScheme.error),
@@ -579,6 +589,13 @@ class _ItemFormData {
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   TextEditingController quantityController = TextEditingController(text: '1');
+
+  void dispose() {
+    consumedByController.dispose();
+    nameController.dispose();
+    priceController.dispose();
+    quantityController.dispose();
+  }
 }
 
 class _BillFormData {
