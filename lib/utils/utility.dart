@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 class Utility {
   static Future<bool> hasInternetConnection() async {
     final result = await Connectivity().checkConnectivity();
-    return result != ConnectivityResult.none;
+    return result.any((status) => status != ConnectivityResult.none);
   }
 
   static Future<File?> pickImage(BuildContext context, ImageSource source) async {
