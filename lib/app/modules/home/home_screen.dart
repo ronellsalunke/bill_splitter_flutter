@@ -51,6 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
             actions: [
               IconButton(
                 onPressed: () {
+                  HapticFeedback.selectionClick();
                   context.pushNamed('settings');
                 },
                 icon: const Icon(Icons.settings_rounded),
@@ -211,7 +212,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('tax', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                      Text('${bill.tax}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                      Text(
+                        '${bill.tax}%',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w300,
+                          fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()],
+                        ),
+                      ),
                     ],
                   ),
                   verticalSpace(8),
@@ -220,7 +228,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     children: [
                       const Text('service', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                      Text('${bill.service}%', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
+                      Text(
+                        '${bill.service}%',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w300,
+                          fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()],
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -235,7 +250,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   horizontalSpace(8),
                   Text(
                     '₹ ${bill.amount.toStringAsFixed(2)}',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colorScheme.primary),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.primary,
+                      fontFeatures: const [FontFeature.tabularFigures(), FontFeature.slashedZero()],
+                    ),
                   ),
                 ],
               ),
@@ -262,7 +282,10 @@ Widget itemQtyWidget(List<BillItem> items) {
                 ),
               ),
               horizontalSpace(8),
-              Text('₹ ${item.price.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12)),
+              Text(
+                '₹ ${item.price.toStringAsFixed(2)}',
+                style: const TextStyle(fontSize: 12, fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()]),
+              ),
             ],
           ).paddingSymmetric(vertical: 4),
         )

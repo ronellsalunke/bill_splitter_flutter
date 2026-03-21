@@ -50,7 +50,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${plan?.name?.toCapitalized ?? ''} owes ₹${totalOwed.toStringAsFixed(2)}',
+                          '${plan?.name?.toCapitalized ?? ''} owes ₹ ${totalOwed.toStringAsFixed(2)}',
                           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                         ),
                         verticalSpace(10),
@@ -63,7 +63,13 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('${p?.to?.toCapitalized}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                              Text('₹${p?.amount?.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                              Text(
+                                '₹ ${p?.amount?.toStringAsFixed(2)}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()],
+                                ),
+                              ),
                             ],
                           ),
                         ),
