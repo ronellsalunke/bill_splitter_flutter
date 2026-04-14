@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -120,11 +121,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     SegmentedListTile(
-                      leading: SvgPicture.asset(AppIcons.githubIcon, height: 24, width: 24, color: colorScheme.primary),
+                      leading: SvgPicture.asset(
+                        AppIcons.githubIcon,
+                        height: 24,
+                        width: 24,
+                        colorFilter: ColorFilter.mode(colorScheme.primary, BlendMode.srcIn),
+                      ),
                       title: const Text('github', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       onTap: () {
                         HapticFeedback.selectionClick();
                         launchUrl(Uri.parse('https://github.com/ronellsalunke/bill_splitter_flutter'));
+                      },
+                    ),
+                    SegmentedListTile(
+                      leading: Icon(Icons.code, color: context.colorScheme.primary),
+                      title: const Text('licenses', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        context.pushNamed('licenses');
                       },
                     ),
                   ],

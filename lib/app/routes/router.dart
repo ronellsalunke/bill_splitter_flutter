@@ -2,6 +2,7 @@ import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/modules/edit_bill/edit_bill_screen.dart';
 import 'package:bs_flutter/app/modules/home/home_screen.dart';
 import 'package:bs_flutter/app/modules/payment_plans/payment_plans_screen.dart';
+import 'package:bs_flutter/app/modules/settings/license_screen.dart';
 import 'package:bs_flutter/app/modules/settings/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +14,7 @@ final GoRouter router = GoRouter(
   routes: [
     GoRoute(name: 'home', path: '/', builder: (context, state) => const HomeScreen()),
     GoRoute(name: 'settings', path: '/settings', builder: (context, state) => const SettingsScreen()),
+    GoRoute(name: 'licenses', path: '/licenses', builder: (context, state) => const LicenseScreen()),
     GoRoute(
       name: 'bill',
       path: '/bill/:id',
