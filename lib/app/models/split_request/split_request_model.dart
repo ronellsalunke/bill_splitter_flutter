@@ -5,7 +5,6 @@ part 'split_request_model.g.dart';
 
 @freezed
 abstract class SplitRequest with _$SplitRequest {
-  @JsonSerializable(explicitToJson: true)
   factory SplitRequest({required List<SplitBill> bills}) = _SplitRequest;
 
   factory SplitRequest.fromJson(Map<String, dynamic> json) => _$SplitRequestFromJson(json);
@@ -13,7 +12,6 @@ abstract class SplitRequest with _$SplitRequest {
 
 @freezed
 abstract class SplitBill with _$SplitBill {
-  @JsonSerializable(explicitToJson: true)
   factory SplitBill({
     required List<SplitItem> items,
     @JsonKey(name: 'paid_by') required String paidBy,
@@ -27,7 +25,6 @@ abstract class SplitBill with _$SplitBill {
 
 @freezed
 abstract class SplitItem with _$SplitItem {
-  @JsonSerializable(explicitToJson: true)
   factory SplitItem({
     required String name,
     required double price,
