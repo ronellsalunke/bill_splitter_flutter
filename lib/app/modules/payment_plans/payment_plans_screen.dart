@@ -56,7 +56,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                         verticalSpace(10),
                         DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
                         verticalSpace(8),
-                        const Text('to be paid to:'),
+                        const Text('to pay:'),
                         verticalSpace(8),
                         ...?plan?.payments?.map(
                           (p) => Row(

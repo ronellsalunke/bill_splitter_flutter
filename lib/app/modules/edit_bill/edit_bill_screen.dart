@@ -154,32 +154,40 @@ class _EditBillScreenState extends State<EditBillScreen> {
       builder: (context) => Container(
         padding: const EdgeInsets.all(16),
         child: SafeArea(
-          child: Row(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Flexible(
-                child: CommonButton(
-                  borderRadius: 8,
-                  text: 'gallery',
-                  icon: Icons.photo_library_rounded,
-                  iconColor: colorScheme.onPrimary,
-                  mainAxisSize: MainAxisSize.max,
-                  onTap: () {
-                    context.pop(ImageSource.gallery);
-                  },
-                ),
-              ),
-              horizontalSpace(10),
-              Flexible(
-                child: CommonButton(
-                  borderRadius: 8,
-                  icon: Icons.camera_alt_rounded,
-                  iconColor: colorScheme.onPrimary,
-                  text: 'camera',
-                  mainAxisSize: MainAxisSize.max,
-                  onTap: () {
-                    context.pop(ImageSource.camera);
-                  },
-                ),
+              const Text('upload image', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+              verticalSpace(12),
+              Row(
+                children: [
+                  Flexible(
+                    child: CommonButton(
+                      borderRadius: 8,
+                      text: 'gallery',
+                      icon: Icons.photo_library_rounded,
+                      iconColor: colorScheme.onPrimary,
+                      mainAxisSize: MainAxisSize.max,
+                      onTap: () {
+                        context.pop(ImageSource.gallery);
+                      },
+                    ),
+                  ),
+                  horizontalSpace(10),
+                  Flexible(
+                    child: CommonButton(
+                      borderRadius: 8,
+                      icon: Icons.camera_alt_rounded,
+                      iconColor: colorScheme.onPrimary,
+                      text: 'camera',
+                      mainAxisSize: MainAxisSize.max,
+                      onTap: () {
+                        context.pop(ImageSource.camera);
+                      },
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -309,7 +317,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
               children: [
                 verticalSpace(12),
                 CommonButton(
-                  text: _isOcrProcessing ? 'Processing...' : 'scan receipt',
+                  text: _isOcrProcessing ? 'processing...' : 'scan receipt',
                   icon: _isOcrProcessing ? null : Icons.document_scanner_rounded,
                   iconColor: colorScheme.onPrimary,
                   borderRadius: 8,
