@@ -3,6 +3,7 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
+import 'package:bs_flutter/app/bloc/update/update_bloc.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:bs_flutter/app/routes/router.dart';
@@ -146,6 +147,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       providers: [
         BlocProvider(create: (context) => getIt<BillBloc>()..add(LoadBills())),
         BlocProvider(create: (context) => getIt<PaymentPlansBloc>()),
+        BlocProvider(create: (context) => getIt<UpdateBloc>()),
         BlocProvider(create: (context) => getIt<ThemeBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(

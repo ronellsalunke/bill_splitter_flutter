@@ -71,6 +71,18 @@ void main() {
       verify(() => mockApiService.getPostApiResponse(any(), any())).called(1);
     });
 
+    test('fetchUpdateManifest success', () async {
+      final mockResponse = {'latestVersion': '1.0.8', 'latestBuildNumber': 8, 'message': 'Update available'};
+      when(() => mockApiService.getGetApiResponse(any())).thenAnswer((_) async => mockResponse);
+
+      final result = await repository.fetchUpdateManifest();
+
+      expect(result.latestVersion, '1.0.8');
+      expect(result.latestBuildNumber, 8);
+      expect(result.message, 'Update available');
+      verify(() => mockApiService.getGetApiResponse(any())).called(1);
+    });
+
     test('processReceipt throws on error', () async {
       when(() => mockFile.path).thenReturn('test_receipt.jpg');
       when(() => mockApiService.getPostApiResponse(any(), any())).thenThrow(Exception('Network error'));

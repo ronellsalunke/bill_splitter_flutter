@@ -3,6 +3,10 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
+import 'package:bs_flutter/app/bloc/update/update_bloc.dart';
+import 'package:bs_flutter/app/bloc/update/update_event.dart';
+import 'package:bs_flutter/app/bloc/update/update_state.dart';
+import 'package:bs_flutter/app/data/endpoints.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
@@ -19,6 +23,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -33,106 +38,151 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getIt<ShareIntentService>().checkPendingShareIntent();
+      context.read<UpdateBloc>().add(CheckForUpdate());
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    return BlocBuilder<BillBloc, BillState>(
-      builder: (context, state) {
-        final bool hasBills = state is BillLoaded && state.bills.isNotEmpty;
-        return Scaffold(
-          appBar: AppBar(
-            leading: SvgPicture.asset(AppIcons.logoIcon, color: colorScheme.primary).paddingOnly(left: 16),
-            leadingWidth: 48,
-            title: const Text('bill splitter'),
-            centerTitle: false,
-            actions: [
-              IconButton(
-                onPressed: () {
-                  HapticFeedback.selectionClick();
-                  context.pushNamed('settings');
-                },
-                icon: const Icon(Icons.settings_rounded),
-              ),
-            ],
-          ),
-          bottomNavigationBar: hasBills
-              ? Container(
-                  decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
-                  padding: const EdgeInsets.all(16),
-                  child: SafeArea(
-                    child: Row(
+    return BlocListener<UpdateBloc, UpdateState>(
+      listener: (context, updateState) {
+        if (updateState is UpdateAvailable) {
+          _showUpdateBanner(context, updateState);
+        } else if (updateState is UpdateNotAvailable || updateState is UpdateBannerDismissed) {
+          ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+        }
+      },
+      child: BlocBuilder<BillBloc, BillState>(
+        builder: (context, state) {
+          final bool hasBills = state is BillLoaded && state.bills.isNotEmpty;
+          return Scaffold(
+            appBar: AppBar(
+              leading: SvgPicture.asset(AppIcons.logoIcon, color: colorScheme.primary).paddingOnly(left: 16),
+              leadingWidth: 48,
+              title: const Text('bill splitter'),
+              centerTitle: false,
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    context.pushNamed('settings');
+                  },
+                  icon: const Icon(Icons.settings_rounded),
+                ),
+              ],
+            ),
+            bottomNavigationBar: hasBills
+                ? Container(
+                    decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
+                    padding: const EdgeInsets.all(16),
+                    child: SafeArea(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: CommonOutlineButton(
+                              borderRadius: 8,
+                              text: 'add bill',
+                              icon: Icons.add_circle_rounded,
+                              iconColor: colorScheme.primary,
+                              mainAxisSize: MainAxisSize.max,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                context.pushNamed('bill', pathParameters: {'id': 'new'});
+                              },
+                            ),
+                          ),
+                          horizontalSpace(10),
+                          Flexible(
+                            child: CommonButton(
+                              borderRadius: 8,
+                              icon: Icons.calculate_rounded,
+                              iconColor: colorScheme.onPrimary,
+                              text: 'split',
+                              mainAxisSize: MainAxisSize.max,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                context.read<PaymentPlansBloc>().add(CalculateSplit(state.bills));
+                                context.pushNamed('payment-plans');
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : null,
+            body: BlocBuilder<BillBloc, BillState>(
+              builder: (context, state) {
+                if (state is BillLoaded && state.bills.isEmpty) {
+                  return Center(child: _buildAddNewBillButton());
+                }
+                return SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
                       children: [
-                        Flexible(
-                          child: CommonOutlineButton(
-                            borderRadius: 8,
-                            text: 'add bill',
-                            icon: Icons.add_circle_rounded,
-                            iconColor: colorScheme.primary,
-                            mainAxisSize: MainAxisSize.max,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              context.pushNamed('bill', pathParameters: {'id': 'new'});
-                            },
-                          ),
-                        ),
-                        horizontalSpace(10),
-                        Flexible(
-                          child: CommonButton(
-                            borderRadius: 8,
-                            icon: Icons.calculate_rounded,
-                            iconColor: colorScheme.onPrimary,
-                            text: 'split',
-                            mainAxisSize: MainAxisSize.max,
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              context.read<PaymentPlansBloc>().add(CalculateSplit((state).bills));
-                              context.pushNamed('payment-plans');
-                            },
-                          ),
-                        ),
+                        if (state is BillLoading)
+                          const CircularProgressIndicator()
+                        else if (state is BillError)
+                          Text('Error: ${state.message}')
+                        else if (state is BillLoaded)
+                          Column(
+                            children: [
+                              verticalSpace(12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [const Text('bills'), Text('${state.bills.length}')],
+                              ),
+                              verticalSpace(12),
+                              ...state.bills.map((bill) => _dismissibleBillCard(bill)),
+                            ],
+                          )
+                        else
+                          const SizedBox(),
                       ],
                     ),
                   ),
-                )
-              : null,
-          body: BlocBuilder<BillBloc, BillState>(
-            builder: (context, state) {
-              if (state is BillLoaded && state.bills.isEmpty) {
-                return Center(child: _buildAddNewBillButton());
-              }
-              return SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    children: [
-                      if (state is BillLoading)
-                        const CircularProgressIndicator()
-                      else if (state is BillError)
-                        Text('Error: ${state.message}')
-                      else if (state is BillLoaded)
-                        Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [const Text('bills'), Text('${state.bills.length}')],
-                            ),
-                            verticalSpace(12),
-                            ...state.bills.map((bill) => _dismissibleBillCard(bill)),
-                          ],
-                        )
-                      else
-                        const SizedBox(),
-                    ],
-                  ),
-                ),
-              );
-            },
+                );
+              },
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showUpdateBanner(BuildContext context, UpdateAvailable state) {
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.hideCurrentMaterialBanner();
+    scaffoldMessenger.showMaterialBanner(
+      MaterialBanner(
+        forceActionsBelow: false,
+
+        content: Text(state.manifest.message ?? 'update available'),
+        actions: [
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextButton(
+                onPressed: () {
+                  context.read<UpdateBloc>().add(DismissUpdateBanner());
+                  launchUrl(Uri.parse(Endpoints.latestRelease), mode: LaunchMode.externalApplication);
+                },
+                child: const Text('update'),
+              ),
+              IconButton(
+                tooltip: 'close',
+                visualDensity: VisualDensity.compact,
+                onPressed: () {
+                  context.read<UpdateBloc>().add(DismissUpdateBanner());
+                },
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 

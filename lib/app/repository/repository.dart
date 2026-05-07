@@ -6,6 +6,7 @@ import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/models/split/split_model.dart';
 import 'package:bs_flutter/app/models/split_request/split_request_model.dart';
+import 'package:bs_flutter/app/models/update/update_manifest.dart';
 import 'package:dio/dio.dart';
 
 class AppRepository {
@@ -57,6 +58,15 @@ class AppRepository {
       final data = splitRequest.toJson();
       dynamic response = await _apiServices.getPostApiResponse(url, data);
       return SplitModel.fromJson(response);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<UpdateManifest> fetchUpdateManifest() async {
+    try {
+      dynamic response = await _apiServices.getGetApiResponse(Endpoints.updateManifest);
+      return UpdateManifest.fromJson(response);
     } catch (e) {
       rethrow;
     }

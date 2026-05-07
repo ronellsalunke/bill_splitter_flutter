@@ -1,6 +1,7 @@
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
+import 'package:bs_flutter/app/bloc/update/update_bloc.dart';
 import 'package:bs_flutter/app/data/base_api_services.dart';
 import 'package:bs_flutter/app/data/network_api_service.dart';
 import 'package:bs_flutter/app/models/bill.dart';
@@ -61,4 +62,5 @@ Future<void> setupServiceLocator() async {
 
   getIt.registerFactory<BillBloc>(() => BillBloc(getIt<Box<Bill>>()));
   getIt.registerFactory<PaymentPlansBloc>(() => PaymentPlansBloc(getIt<AppRepository>()));
+  getIt.registerFactory<UpdateBloc>(() => UpdateBloc(getIt<AppRepository>()));
 }
