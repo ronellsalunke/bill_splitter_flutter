@@ -17,7 +17,6 @@ import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
-import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -58,7 +57,10 @@ class _HomeScreenState extends State<HomeScreen> {
           final bool hasBills = state is BillLoaded && state.bills.isNotEmpty;
           return Scaffold(
             appBar: AppBar(
-              leading: SvgPicture.asset(AppIcons.logoIcon, color: colorScheme.primary).paddingOnly(left: 16),
+              leading: SvgPicture.asset(
+                AppIcons.logoIcon,
+                colorFilter: ColorFilter.mode(colorScheme.primary, BlendMode.srcIn),
+              ).paddingOnly(left: 16),
               leadingWidth: 48,
               title: const Text('bill splitter'),
               centerTitle: false,
@@ -191,7 +193,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        SvgPicture.asset(AppIcons.logoIcon, color: colorScheme.outline, width: 60, height: 60),
+        SvgPicture.asset(
+          AppIcons.logoIcon,
+          colorFilter: ColorFilter.mode(colorScheme.outline, BlendMode.srcIn),
+          width: 60,
+          height: 60,
+        ),
         verticalSpace(12),
         Text('no bills yet', style: TextStyle(color: colorScheme.outline)),
         verticalSpace(24),
@@ -232,6 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget billCard(Bill bill) {
     final colorScheme = context.colorScheme;
+    final occasion = bill.occasion.trim().isEmpty ? 'untitled bill' : bill.occasion.trim();
     return Clickable(
       onClick: () {
         context.pushNamed('bill', pathParameters: {'id': bill.id});
@@ -248,56 +256,24 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('PAID BY', style: TextStyle(fontSize: 12)),
-              verticalSpace(8),
-              Text(bill.paidBy, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              verticalSpace(8),
-              itemQtyWidget(bill.items),
-              verticalSpace(8),
-              DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
-              verticalSpace(8),
-              Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('tax', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                      Text(
-                        '${bill.tax}%',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w300,
-                          fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()],
-                        ),
-                      ),
-                    ],
-                  ),
-                  verticalSpace(8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                    children: [
-                      const Text('service', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w300)),
-                      Text(
-                        '${bill.service}%',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w300,
-                          fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+              Text(
+                occasion,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              verticalSpace(8),
-              DottedLine(dashLength: 6, dashColor: colorScheme.onSurface),
-              verticalSpace(8),
+              verticalSpace(12),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('TOTAL', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                  horizontalSpace(8),
+                  Expanded(
+                    child: Text(
+                      bill.paidBy,
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  horizontalSpace(12),
                   Text(
                     '₹ ${bill.amount.toStringAsFixed(2)}',
                     style: TextStyle(
@@ -315,32 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-}
-
-Widget itemQtyWidget(List<BillItem> items) {
-  return Column(
-    children: items
-        .map(
-          (item) => Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Flexible(
-                child: Text(
-                  '${item.quantity} x ${item.name}',
-                  style: const TextStyle(fontSize: 12),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              horizontalSpace(8),
-              Text(
-                '₹ ${item.price.toStringAsFixed(2)}',
-                style: const TextStyle(fontSize: 12, fontFeatures: [FontFeature.tabularFigures(), FontFeature.slashedZero()]),
-              ),
-            ],
-          ).paddingSymmetric(vertical: 4),
-        )
-        .toList(),
-  );
 }
 
 class ReceiptClipper extends CustomClipper<Path> {
