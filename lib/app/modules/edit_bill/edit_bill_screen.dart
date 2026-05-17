@@ -37,6 +37,7 @@ class EditBillScreen extends StatefulWidget {
 
 class _EditBillScreenState extends State<EditBillScreen> {
   final _formData = _BillFormData();
+  final _occasionController = TextEditingController();
   final _amountController = TextEditingController();
   final _taxController = TextEditingController(text: '5.0');
   final _serviceController = TextEditingController();
@@ -76,7 +77,9 @@ class _EditBillScreenState extends State<EditBillScreen> {
   void _populateFormFromBill(Bill bill) {
     _existingCreatedAt = bill.createdAt;
     _refreshParticipantsFromBill(bill);
+    _formData.occasion = bill.occasion;
     _formData.paidBy = bill.paidBy;
+    _occasionController.text = bill.occasion;
     _amountController.text = bill.amount.toString();
     _taxController.text = bill.tax.toString();
     _serviceController.text = bill.service.toString();
@@ -255,6 +258,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
   void dispose() {
     _participantsController.dispose();
     _participantsFocusNode.dispose();
+    _occasionController.dispose();
     _amountController.dispose();
     _taxController.dispose();
     _serviceController.dispose();
@@ -371,6 +375,15 @@ class _EditBillScreenState extends State<EditBillScreen> {
                   ),
                 ),
                 verticalSpace(20),
+                CommonTextField(
+                  label: 'OCCASION *',
+                  hintText: 'dinner, outing, groceries',
+                  controller: _occasionController,
+                  textCapitalization: TextCapitalization.words,
+                  keyboardType: TextInputType.name,
+                  onChanged: (value) => _formData.occasion = value,
+                ),
+                verticalSpace(20),
                 CommonDropdown<String>(
                   label: 'PAID BY',
                   hintText: 'select person',
@@ -467,7 +480,14 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   void _saveBill() {
+    final occasion = _occasionController.text.trim();
+
     // Validate
+    if (occasion.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please add an occasion')));
+      return;
+    }
+
     if (_formData.paidBy.isEmpty ||
         _amountController.text.isEmpty ||
         double.tryParse(_amountController.text) == null ||
@@ -494,6 +514,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
     final bill = Bill(
       id: widget.billId == 'new' ? DateTime.now().millisecondsSinceEpoch.toString() : widget.billId,
+      occasion: occasion,
       paidBy: _formData.paidBy,
       amount: double.parse(_amountController.text),
       tax: double.tryParse(_taxController.text) ?? 5.0,
@@ -623,6 +644,7 @@ class _ItemFormData {
 }
 
 class _BillFormData {
+  String occasion = '';
   String paidBy = '';
   double amount = 0.0;
   double tax = 5.0;

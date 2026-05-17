@@ -4,10 +4,16 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('Bill Model Tests', () {
     test('Bill serialization and deserialization', () {
-      final billItem = BillItem(name: 'Pizza', price: 10.0, quantity: 2, consumedBy: ['Alice', 'Bob']);
+      final billItem = BillItem(
+        name: 'Pizza',
+        price: 10.0,
+        quantity: 2,
+        consumedBy: ['Alice', 'Bob'],
+      );
 
       final bill = Bill(
         id: '1',
+        occasion: 'Dinner',
         paidBy: 'Alice',
         amount: 25.0,
         tax: 2.5,
@@ -20,6 +26,7 @@ void main() {
       final deserialized = Bill.fromJson(json);
 
       expect(deserialized.id, bill.id);
+      expect(deserialized.occasion, bill.occasion);
       expect(deserialized.paidBy, bill.paidBy);
       expect(deserialized.amount, bill.amount);
       expect(deserialized.tax, bill.tax);
@@ -29,8 +36,29 @@ void main() {
       expect(deserialized.createdAt, bill.createdAt);
     });
 
+    test('Bill defaults missing occasion during deserialization', () {
+      final json = {
+        'id': '1',
+        'paidBy': 'Alice',
+        'amount': 25.0,
+        'tax': 2.5,
+        'service': 3.0,
+        'items': <Map<String, dynamic>>[],
+        'createdAt': DateTime(2023, 1, 1).toIso8601String(),
+      };
+
+      final deserialized = Bill.fromJson(json);
+
+      expect(deserialized.occasion, '');
+    });
+
     test('BillItem serialization and deserialization', () {
-      final billItem = BillItem(name: 'Burger', price: 5.0, quantity: 1, consumedBy: ['Charlie']);
+      final billItem = BillItem(
+        name: 'Burger',
+        price: 5.0,
+        quantity: 1,
+        consumedBy: ['Charlie'],
+      );
 
       final json = billItem.toJson();
       final deserialized = BillItem.fromJson(json);

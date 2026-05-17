@@ -20,6 +20,9 @@ class Bill extends HiveObject {
   List<BillItem> items;
   @HiveField(6)
   DateTime createdAt;
+  @JsonKey(defaultValue: '')
+  @HiveField(7, defaultValue: '')
+  String occasion;
 
   Bill({
     required this.id,
@@ -29,6 +32,7 @@ class Bill extends HiveObject {
     required this.service,
     required this.items,
     required this.createdAt,
+    this.occasion = '',
   });
 
   factory Bill.fromJson(Map<String, dynamic> json) => _$BillFromJson(json);
@@ -48,9 +52,15 @@ class BillItem extends HiveObject {
   @HiveField(3)
   List<String> consumedBy;
 
-  BillItem({required this.name, required this.price, required this.quantity, required this.consumedBy});
+  BillItem({
+    required this.name,
+    required this.price,
+    required this.quantity,
+    required this.consumedBy,
+  });
 
-  factory BillItem.fromJson(Map<String, dynamic> json) => _$BillItemFromJson(json);
+  factory BillItem.fromJson(Map<String, dynamic> json) =>
+      _$BillItemFromJson(json);
 
   Map<String, dynamic> toJson() => _$BillItemToJson(this);
 }
