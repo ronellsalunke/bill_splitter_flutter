@@ -118,11 +118,16 @@ class _SettledHero extends StatefulWidget {
 
 class _SettledHeroState extends State<_SettledHero> with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  late final Animation<double> _labelOpacity;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: const Duration(seconds: 1))..forward();
+    _labelOpacity = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.62, 1, curve: Curves.easeOut),
+    );
   }
 
   @override
@@ -155,18 +160,9 @@ class _SettledHeroState extends State<_SettledHero> with SingleTickerProviderSta
               },
             ),
           ),
+          FadeTransition(opacity: _labelOpacity, child: const SizedBox(height: 12)),
           FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _controller,
-              curve: const Interval(0.62, 1, curve: Curves.easeOut),
-            ),
-            child: const SizedBox(height: 12),
-          ),
-          FadeTransition(
-            opacity: CurvedAnimation(
-              parent: _controller,
-              curve: const Interval(0.62, 1, curve: Curves.easeOut),
-            ),
+            opacity: _labelOpacity,
             child: Text(
               'all settled up!',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
