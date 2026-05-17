@@ -1,4 +1,5 @@
 import 'package:bs_flutter/extensions/context_extensions.dart';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
 class CommonDropdown<T> extends StatelessWidget {
@@ -28,10 +29,33 @@ class CommonDropdown<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final defaultLabelColor = labelColor ?? context.colorScheme.onSurface;
-    final defaultHintColor = hintColor ?? context.colorScheme.onSurface;
+    final defaultHintColor = hintColor ?? context.colorScheme.onSurfaceVariant;
     final defaultTextColor = textColor ?? context.colorScheme.onSurface;
-    final defaultBorderColor = borderColor ?? context.colorScheme.onSurface;
-    final focusedBorderColor = context.colorScheme.primary;
+    final defaultBorderColor = borderColor ?? context.colorScheme.outline;
+    final borderRadius = BorderRadius.circular(8);
+    final textStyle = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      color: defaultTextColor,
+      height: 1.4,
+      fontFamily: 'jetbrains_mono',
+    );
+    final hintStyle = TextStyle(
+      fontSize: 14,
+      fontWeight: FontWeight.w400,
+      color: defaultHintColor,
+      height: 1.4,
+      fontFamily: 'jetbrains_mono',
+    );
+    final dropdownItems = items
+        .map(
+          (item) => DropdownItem<T>(
+            value: item.value,
+            height: 44,
+            child: DefaultTextStyle(style: textStyle, child: item.child),
+          ),
+        )
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,34 +65,36 @@ class CommonDropdown<T> extends StatelessWidget {
             label!.toUpperCase(),
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: defaultLabelColor, letterSpacing: 1.2),
           ),
-        DropdownButtonFormField<T>(
-          value: value,
-          items: items,
-          onChanged: onChanged,
-          icon: Icon(Icons.keyboard_arrow_down, color: defaultTextColor),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: defaultTextColor,
-            height: 1.4,
-            fontFamily: 'jetbrains_mono',
-          ),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w400,
-              color: defaultHintColor,
-              height: 1.4,
-              fontFamily: 'jetbrains_mono',
+        if (label != null) const SizedBox(height: 6),
+        DropdownButtonHideUnderline(
+          child: DropdownButton2<T>(
+            valueListenable: ValueNotifier<T?>(value),
+            items: dropdownItems,
+            onChanged: onChanged,
+            isExpanded: true,
+            hint: Text(hintText, style: hintStyle, overflow: TextOverflow.ellipsis),
+            disabledHint: Text(hintText, style: hintStyle, overflow: TextOverflow.ellipsis),
+            style: textStyle,
+            buttonStyleData: ButtonStyleData(
+              height: 48,
+              width: double.infinity,
+              padding: const EdgeInsets.only(left: 12, right: 12),
+              decoration: BoxDecoration(
+                borderRadius: borderRadius,
+                border: Border.all(color: onChanged == null ? defaultBorderColor.withValues(alpha: 0.3) : defaultBorderColor),
+              ),
+              elevation: 0,
             ),
-            contentPadding: const EdgeInsets.only(left: 0, right: 0, top: 8, bottom: 12),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: defaultBorderColor, width: 1.0)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: focusedBorderColor, width: 1.4)),
-            errorBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.colorScheme.error, width: 1.0)),
-            focusedErrorBorder: UnderlineInputBorder(borderSide: BorderSide(color: context.colorScheme.error, width: 1.0)),
-            disabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: defaultBorderColor.withOpacity(0.3), width: 1.0)),
-            filled: false,
+            iconStyleData: IconStyleData(
+              icon: Icon(Icons.keyboard_arrow_down_rounded, color: onChanged == null ? defaultHintColor : defaultTextColor),
+              iconSize: 22,
+            ),
+            dropdownStyleData: DropdownStyleData(
+              maxHeight: 250,
+              decoration: BoxDecoration(color: context.colorScheme.surface, borderRadius: borderRadius),
+              elevation: 2,
+            ),
+            menuItemStyleData: const MenuItemStyleData(padding: EdgeInsets.symmetric(horizontal: 12)),
           ),
         ),
       ],

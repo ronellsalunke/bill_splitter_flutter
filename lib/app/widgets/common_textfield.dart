@@ -65,12 +65,14 @@ class CommonTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Default colors
-    final defaultLabelColor = labelColor ?? Theme.of(context).colorScheme.onSurface; // Dark slate grey
-    final defaultHintColor = hintColor ?? Theme.of(context).colorScheme.onSurface; // Medium grey
-    final defaultInputColor = inputTextColor ?? Theme.of(context).colorScheme.onSurface; // Near black
-    final defaultBorderColor = borderColor ?? Theme.of(context).colorScheme.onSurface; // Deep navy/near-black
-    final defaultCursorColor = cursorColor ?? Theme.of(context).colorScheme.primary;
-    final focusedBorderColor = cursorColor ?? Theme.of(context).colorScheme.primary;
+    final colorScheme = Theme.of(context).colorScheme;
+    final defaultLabelColor = labelColor ?? colorScheme.onSurface;
+    final defaultHintColor = hintColor ?? colorScheme.onSurfaceVariant;
+    final defaultInputColor = inputTextColor ?? colorScheme.onSurface;
+    final defaultBorderColor = borderColor ?? colorScheme.outline;
+    final defaultCursorColor = cursorColor ?? colorScheme.primary;
+    final focusedBorderColor = cursorColor ?? colorScheme.primary;
+    final borderRadius = BorderRadius.circular(8);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -80,6 +82,7 @@ class CommonTextField extends StatelessWidget {
             label!.toUpperCase(),
             style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: defaultLabelColor, letterSpacing: 1.2),
           ),
+        if (label != null) const SizedBox(height: 6),
 
         TextFormField(
           controller: controller,
@@ -122,13 +125,28 @@ class CommonTextField extends StatelessWidget {
 
             hintStyle: TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: defaultHintColor, height: 1.4),
 
-            contentPadding: const EdgeInsets.only(left: 0, right: 0, top: 8, bottom: 12),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
 
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: defaultBorderColor, width: 1.0)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: focusedBorderColor, width: 1.4)),
-            errorBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.red.shade700, width: 1.0)),
-            focusedErrorBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.red.shade700, width: 1.0)),
-            disabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: defaultBorderColor.withOpacity(0.3), width: 1.0)),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: defaultBorderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: focusedBorderColor, width: 1.4),
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: Colors.red.shade700),
+            ),
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: Colors.red.shade700, width: 1.4),
+            ),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: defaultBorderColor.withValues(alpha: 0.3)),
+            ),
             suffixIcon: suffixIcon,
             filled: false,
           ),

@@ -193,6 +193,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.7"
+  cue:
+    dependency: "direct main"
+    description:
+      name: cue
+      sha256: "4afd93d6a1d352d6509816cd0a45d71a06be3107b84c3f85259e73afde3cff2c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.1"
   dart_style:
     dependency: transitive
     description:
@@ -233,6 +241,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.3"
+  dropdown_button2:
+    dependency: "direct main"
+    description:
+      name: dropdown_button2
+      sha256: "24f5b775483a9b3c508092766798c10e3f23127e66b3f4a305b5bfb59ff1debc"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
   dynamic_color:
     dependency: "direct main"
     description:
@@ -664,14 +680,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.4"
-  multi_dropdown:
-    dependency: "direct main"
-    description:
-      name: multi_dropdown
-      sha256: fa322e6d05220b2375b5117c328ac1720f0ce08eeb26ffe82a73e08db8782fe9
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.1.1"
   native_toolchain_c:
     dependency: transitive
     description:

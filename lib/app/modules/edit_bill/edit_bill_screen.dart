@@ -22,7 +22,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:multi_dropdown/multi_dropdown.dart';
+
+const _everyoneSplitOption = '__everyone_split_option__';
 
 class EditBillScreen extends StatefulWidget {
   const EditBillScreen({super.key, required this.billId, this.sharedOcrModel, this.fromShare = false});
@@ -94,9 +95,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
         ..nameController.text = item.name
         ..priceController.text = item.price.toString()
         ..quantityController.text = item.quantity.toString()
-        ..consumedByController.setItems(_participants.map((m) => DropdownItem(label: m, value: m)).toList());
-
-      formItem.consumedByController.selectWhere((i) => item.consumedBy.contains(i.value));
+        ..consumedByListenable.value = List<String>.from(item.consumedBy);
 
       _formData.items.add(formItem);
     }
@@ -133,8 +132,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
             ..consumedBy = []
             ..nameController.text = item.name ?? ''
             ..priceController.text = (item.price ?? 0).toString()
-            ..quantityController.text = (item.quantity ?? 1).toString()
-            ..consumedByController.setItems(_participants.map((m) => DropdownItem(label: m, value: m)).toList());
+            ..quantityController.text = (item.quantity ?? 1).toString();
 
           _formData.items.add(formItem);
         }
@@ -289,11 +287,16 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
     for (var item in _formData.items) {
       item.consumedBy.removeWhere((p) => !_participants.contains(p));
-      final dropdownItems = _participants.map((m) => DropdownItem(label: m, value: m)).toList();
-      item.consumedByController.setItems(dropdownItems);
-      item.consumedByController.selectWhere((element) => item.consumedBy.contains(element.value));
+      item.consumedByListenable.value = List<String>.from(item.consumedBy);
     }
     setState(() {});
+  }
+
+  List<CommonMultiDropdownItem<String>> _splitWithDropdownItems() {
+    return [
+      if (_participants.isNotEmpty) const CommonMultiDropdownItem(label: 'Everyone', value: _everyoneSplitOption),
+      ..._participants.map((name) => CommonMultiDropdownItem(label: name, value: name)),
+    ];
   }
 
   @override
@@ -319,7 +322,6 @@ class _EditBillScreenState extends State<EditBillScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                verticalSpace(12),
                 CommonButton(
                   text: _isOcrProcessing ? 'processing...' : 'scan receipt',
                   icon: _isOcrProcessing ? null : Icons.document_scanner_rounded,
@@ -327,117 +329,101 @@ class _EditBillScreenState extends State<EditBillScreen> {
                   borderRadius: 8,
                   mainAxisSize: MainAxisSize.max,
                   onTap: _isOcrProcessing ? null : _onOcrTap,
-                ),
-                verticalSpace(20),
-                CommonTextField(
-                  hintText: 'add members',
-                  label: 'participants',
-                  controller: _participantsController,
-                  textCapitalization: TextCapitalization.words,
-                  currentFocus: _participantsFocusNode,
-                  keyboardType: TextInputType.name,
-                  onFieldSubmitted: (value) {
-                    final text = value.trim();
-                    if (text.isNotEmpty && !_participants.contains(text)) {
-                      setState(() {
-                        _participants.add(text);
-                        _syncDropdownModels();
-                      });
-                      _participantsController.clear();
-                      _participantsFocusNode.requestFocus();
-                    }
-                  },
-                ),
-                verticalSpace(8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  child: Wrap(
-                    spacing: 8,
-                    children: _participants
-                        .asMap()
-                        .entries
-                        .map(
-                          (entry) => Chip(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                            side: BorderSide.none,
-                            label: Text(entry.value, style: TextStyle(color: colorScheme.onSecondary)),
-                            backgroundColor: colorScheme.secondary,
-                            deleteIcon: Icon(Icons.close, size: 16, color: colorScheme.onSecondary),
-                            onDeleted: () {
-                              setState(() {
-                                _participants.removeAt(entry.key);
-                                _syncDropdownModels();
-                              });
-                            },
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ),
-                verticalSpace(20),
-                CommonTextField(
-                  label: 'OCCASION *',
-                  hintText: 'dinner, outing, groceries',
-                  controller: _occasionController,
-                  textCapitalization: TextCapitalization.words,
-                  keyboardType: TextInputType.name,
-                  onChanged: (value) => _formData.occasion = value,
-                ),
-                verticalSpace(20),
-                CommonDropdown<String>(
-                  label: 'PAID BY',
-                  hintText: 'select person',
-                  value: _participants.contains(_formData.paidBy) ? _formData.paidBy : null,
-                  items: _participants
-                      .map((name) => DropdownItem<String>(label: name, value: name))
-                      .map((item) => DropdownMenuItem<String>(value: item.value, child: Text(item.label)))
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      if (value != null) _formData.paidBy = value;
-                    });
-                  },
-                ),
-                verticalSpace(20),
-                CommonTextField(
-                  label: 'AMOUNT PAID',
-                  hintText: '0.00',
-                  controller: _amountController,
-                  keyboardType: TextInputType.number,
-                ),
-                verticalSpace(20),
-                Row(
+                ).paddingAll(16),
+                _formSection(
+                  title: 'participants',
+                  showDivider: false,
                   children: [
-                    Flexible(
-                      child: CommonTextField(
-                        label: 'TAX (%)',
-                        hintText: '5.0',
-                        controller: _taxController,
-                        keyboardType: TextInputType.number,
+                    CommonTextField(
+                      hintText: 'Add name...',
+                      controller: _participantsController,
+                      textCapitalization: TextCapitalization.words,
+                      currentFocus: _participantsFocusNode,
+                      keyboardType: TextInputType.name,
+                      textInputAction: TextInputAction.done,
+                      suffixIcon: IconButton(
+                        tooltip: 'add member',
+                        icon: const Icon(Icons.add_circle_outline_rounded),
+                        onPressed: _addParticipantFromInput,
                       ),
+                      onFieldSubmitted: (_) => _addParticipantFromInput(),
                     ),
-                    horizontalSpace(8),
-                    Flexible(
-                      child: CommonTextField(
-                        label: 'SERVICE (%)',
-                        hintText: '0.0',
-                        controller: _serviceController,
-                        keyboardType: TextInputType.number,
-                      ),
+                    verticalSpace(10),
+                    _participantChips(),
+                  ],
+                ),
+                _formSection(
+                  title: 'payment',
+                  children: [
+                    CommonTextField(
+                      label: 'Occasion *',
+                      hintText: 'Dinner, outing, groceries',
+                      controller: _occasionController,
+                      textCapitalization: TextCapitalization.words,
+                      keyboardType: TextInputType.name,
+                      onChanged: (value) => _formData.occasion = value,
+                    ),
+                    verticalSpace(16),
+                    CommonDropdown<String>(
+                      label: 'Paid by',
+                      hintText: _participants.isEmpty ? 'add participants first' : 'select person',
+                      value: _participants.contains(_formData.paidBy) ? _formData.paidBy : null,
+                      items: _participants.map((name) => DropdownMenuItem<String>(value: name, child: Text(name))).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          if (value != null) _formData.paidBy = value;
+                        });
+                      },
+                    ),
+                    verticalSpace(16),
+                    CommonTextField(
+                      label: 'Amount paid',
+                      hintText: '0.00',
+                      controller: _amountController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    ),
+                    verticalSpace(16),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: CommonTextField(
+                            label: 'Tax (%)',
+                            hintText: '5.0',
+                            controller: _taxController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                        ),
+                        horizontalSpace(10),
+                        Flexible(
+                          child: CommonTextField(
+                            label: 'Service (%)',
+                            hintText: '0.0',
+                            controller: _serviceController,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-
-                verticalSpace(20),
-                const Text('ITEMS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600)),
-                verticalSpace(10),
-                Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList()),
+                _formSection(
+                  title: 'items',
+                  trailing: Text(
+                    '${_formData.items.length}',
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  children: [Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList())],
+                ),
               ],
-            ).paddingSymmetric(horizontal: 16),
+            ),
           ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
-
             padding: const EdgeInsets.all(16),
             child: SafeArea(
               child: Row(
@@ -449,14 +435,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
                       iconColor: colorScheme.primary,
                       mainAxisSize: MainAxisSize.max,
                       borderRadius: 8,
-                      onTap: () {
-                        setState(() {
-                          final item = _ItemFormData();
-                          item.consumedByController.setItems(_participants.map((m) => DropdownItem(label: m, value: m)).toList());
-                          _formData.items.add(item);
-                        });
-                        _listKey.currentState?.insertItem(_formData.items.length - 1);
-                      },
+                      onTap: _addItem,
                     ),
                   ),
                   horizontalSpace(10),
@@ -476,6 +455,101 @@ class _EditBillScreenState extends State<EditBillScreen> {
           ),
         );
       },
+    );
+  }
+
+  void _addParticipantFromInput() {
+    final text = _participantsController.text.trim();
+    if (text.isEmpty || _participants.contains(text)) {
+      return;
+    }
+
+    setState(() {
+      _participants.add(text);
+      _syncDropdownModels();
+    });
+    _participantsController.clear();
+    _participantsFocusNode.requestFocus();
+  }
+
+  void _addItem() {
+    setState(() {
+      _formData.items.add(_ItemFormData());
+    });
+    _listKey.currentState?.insertItem(_formData.items.length - 1);
+  }
+
+  Widget _formSection({required String title, Widget? trailing, bool showDivider = true, required List<Widget> children}) {
+    final colorScheme = context.colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showDivider) Divider(height: 1, thickness: 1, color: colorScheme.outline),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title.toUpperCase(),
+                      style: TextStyle(color: colorScheme.outline, fontSize: 11, fontWeight: FontWeight.w500, letterSpacing: 0.8),
+                    ),
+                  ),
+                  ?trailing,
+                ],
+              ),
+              verticalSpace(10),
+              ...children,
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _participantChips() {
+    final colorScheme = context.colorScheme;
+    if (_participants.isEmpty) {
+      return Text('no participants yet', style: TextStyle(color: colorScheme.outline, fontSize: 12));
+    }
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxHeight: 160),
+      child: SingleChildScrollView(
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _participants.asMap().entries.map((entry) {
+            final name = entry.value;
+            final initial = name.trim().isEmpty ? '?' : name.trim().characters.first.toUpperCase();
+            return Chip(
+              visualDensity: VisualDensity.compact,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+              side: BorderSide.none,
+              avatar: CircleAvatar(
+                radius: 10,
+                backgroundColor: colorScheme.tertiary,
+                child: Text(
+                  initial,
+                  style: TextStyle(color: colorScheme.onTertiary, fontSize: 10, fontWeight: FontWeight.w700),
+                ),
+              ),
+              label: Text(name, style: TextStyle(color: colorScheme.onTertiaryContainer)),
+              backgroundColor: colorScheme.tertiaryContainer,
+              deleteIcon: Icon(Icons.close, size: 16, color: colorScheme.onTertiaryContainer),
+              onDeleted: () {
+                setState(() {
+                  _participants.removeAt(entry.key);
+                  _syncDropdownModels();
+                });
+              },
+            );
+          }).toList(),
+        ),
+      ),
     );
   }
 
@@ -549,8 +623,9 @@ class _EditBillScreenState extends State<EditBillScreen> {
       ),
       child: Container(
         decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(8)),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CommonTextField(
               hintText: 'item name',
@@ -559,19 +634,19 @@ class _EditBillScreenState extends State<EditBillScreen> {
               textCapitalization: TextCapitalization.words,
               keyboardType: TextInputType.name,
             ),
-            verticalSpace(10),
+            verticalSpace(8),
             Row(
               children: [
-                Flexible(
+                Expanded(
                   child: CommonTextField(
                     hintText: 'price',
                     controller: _formData.items[index].priceController,
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     onChanged: (value) => _formData.items[index].price = double.tryParse(value) ?? 0.0,
                   ),
                 ),
-                horizontalSpace(8),
-                Flexible(
+                horizontalSpace(12),
+                Expanded(
                   child: CommonTextField(
                     hintText: 'quantity',
                     controller: _formData.items[index].quantityController,
@@ -581,43 +656,20 @@ class _EditBillScreenState extends State<EditBillScreen> {
                 ),
               ],
             ),
-            verticalSpace(10),
+            verticalSpace(8),
             CommonMultiDropdown<String>(
-              hintText: 'select participants',
-              label: 'consumed by',
-              items: _participants
-                  .map((m) => DropdownItem(label: m, value: m, selected: _formData.items[index].consumedBy.contains(m)))
-                  .toList(),
-              controller: _formData.items[index].consumedByController,
-              onSelectionChanged: (selectedItems) {
-                setState(() {
-                  _formData.items[index].consumedBy = List<String>.from(selectedItems);
-                });
-              },
-            ),
-            if (_participants.isNotEmpty) ...[
-              verticalSpace(8),
-              Row(
-                children: [
-                  Checkbox(
-                    value: _participants.every((m) => _formData.items[index].consumedBy.contains(m)),
-                    onChanged: (value) {
+              hintText: _participants.isEmpty ? 'add participants first' : 'select participants',
+              items: _splitWithDropdownItems(),
+              valuesListenable: _formData.items[index].consumedByListenable,
+              selectAllValue: _everyoneSplitOption,
+              onSelectionChanged: _participants.isEmpty
+                  ? null
+                  : (selectedItems) {
                       setState(() {
-                        if (value == true) {
-                          _formData.items[index].consumedBy = List<String>.from(_participants);
-                          _formData.items[index].consumedByController.selectAll();
-                        } else {
-                          _formData.items[index].consumedBy.clear();
-                          _formData.items[index].consumedByController.clearAll();
-                        }
+                        _formData.items[index].consumedBy = selectedItems.where(_participants.contains).toList();
                       });
                     },
-                    visualDensity: VisualDensity.compact,
-                  ),
-                  const Text('Consumed by all', style: TextStyle(fontSize: 12)),
-                ],
-              ),
-            ],
+            ),
           ],
         ),
       ),
@@ -630,13 +682,13 @@ class _ItemFormData {
   double price = 0.0;
   int quantity = 1;
   List<String> consumedBy = [];
-  MultiSelectController<String> consumedByController = MultiSelectController<String>();
+  ValueNotifier<List<String>> consumedByListenable = ValueNotifier<List<String>>([]);
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
   TextEditingController quantityController = TextEditingController(text: '1');
 
   void dispose() {
-    consumedByController.dispose();
+    consumedByListenable.dispose();
     nameController.dispose();
     priceController.dispose();
     quantityController.dispose();
