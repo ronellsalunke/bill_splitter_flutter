@@ -15,6 +15,7 @@ import 'package:bs_flutter/app/widgets/common_textfield.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
+import 'package:bs_flutter/utils/swipe_hint_preferences.dart';
 import 'package:bs_flutter/utils/utility.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
@@ -553,8 +554,10 @@ class _EditBillScreenState extends State<EditBillScreen> {
     );
   }
 
-  void _saveBill() {
+  Future<void> _saveBill() async {
     final occasion = _occasionController.text.trim();
+    final billBloc = context.read<BillBloc>();
+    final router = GoRouter.of(context);
 
     // Validate
     if (occasion.isEmpty) {
@@ -598,11 +601,13 @@ class _EditBillScreenState extends State<EditBillScreen> {
     );
 
     if (widget.billId == 'new') {
-      context.read<BillBloc>().add(AddBill(bill));
+      await getIt<SwipeHintPreferences>().scheduleHomeBillActionsHint();
+      billBloc.add(AddBill(bill));
     } else {
-      context.read<BillBloc>().add(UpdateBill(bill));
+      billBloc.add(UpdateBill(bill));
     }
-    context.pop();
+    if (!mounted) return;
+    router.pop();
   }
 
   Widget itemCard(int index) {

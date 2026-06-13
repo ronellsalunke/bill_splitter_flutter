@@ -7,6 +7,7 @@ import 'package:bs_flutter/app/data/network_api_service.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
+import 'package:bs_flutter/utils/swipe_hint_preferences.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
@@ -26,6 +27,7 @@ Future<void> setupServiceLocator() async {
 
   final prefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(prefs);
+  getIt.registerLazySingleton<SwipeHintPreferences>(() => SwipeHintPreferences(getIt<SharedPreferences>()));
 
   getIt.registerLazySingleton<Dio>(() {
     final dio = Dio(

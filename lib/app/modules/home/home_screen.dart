@@ -16,10 +16,12 @@ import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
+import 'package:bs_flutter/utils/swipe_hint_preferences.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -120,30 +122,39 @@ class _HomeScreenState extends State<HomeScreen> {
                   return Center(child: _buildAddNewBillButton());
                 }
                 return SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        if (state is BillLoading)
-                          const CircularProgressIndicator()
-                        else if (state is BillError)
-                          Text('Error: ${state.message}')
-                        else if (state is BillLoaded)
-                          Column(
-                            children: [
-                              verticalSpace(12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [const Text('bills'), Text('${state.bills.length}')],
-                              ),
-                              verticalSpace(12),
-                              ...state.bills.map((bill) => _dismissibleBillCard(bill)),
-                            ],
-                          )
-                        else
-                          const SizedBox(),
-                      ],
-                    ),
+                  child: Column(
+                    children: [
+                      if (state is BillLoading)
+                        const CircularProgressIndicator()
+                      else if (state is BillError)
+                        Text('Error: ${state.message}')
+                      else if (state is BillLoaded)
+                        Builder(
+                          builder: (context) {
+                            final hintPrefs = getIt<SwipeHintPreferences>();
+                            final shouldPreviewFirstBill = state.bills.length == 1 && hintPrefs.isHomeBillActionsHintPending;
+                            return Column(
+                              children: [
+                                verticalSpace(12),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [const Text('bills'), Text('${state.bills.length}')],
+                                  ),
+                                ),
+                                verticalSpace(12),
+                                for (final entry in state.bills.asMap().entries) ...[
+                                  _slidableBillCard(entry.value, showPreview: shouldPreviewFirstBill && entry.key == 0),
+                                  if (entry.key != state.bills.length - 1) const Divider(height: 1),
+                                ],
+                              ],
+                            );
+                          },
+                        )
+                      else
+                        const SizedBox(),
+                    ],
                   ),
                 );
               },
@@ -218,23 +229,31 @@ class _HomeScreenState extends State<HomeScreen> {
     ).paddingSymmetric(horizontal: 16);
   }
 
-  Widget _dismissibleBillCard(Bill bill) {
+  Widget _slidableBillCard(Bill bill, {bool showPreview = false}) {
     final colorScheme = context.colorScheme;
-    return Dismissible(
+    return _BillSlidableCard(
       key: ValueKey(bill.id),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        color: colorScheme.error,
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
-        child: Icon(Icons.delete_outline, color: colorScheme.onError),
-      ),
-      onDismissed: (direction) {
-        HapticFeedback.lightImpact();
-        context.read<BillBloc>().add(DeleteBill(bill.id));
+      bill: bill,
+      onDelete: () => _deleteBill(bill),
+      onSplit: () => _splitBill(bill),
+      onPreviewCompleted: () async {
+        await getIt<SwipeHintPreferences>().markHomeBillActionsHintShown();
       },
+      colorScheme: colorScheme,
+      showPreview: showPreview,
       child: billCard(bill),
-    ).paddingSymmetric(vertical: 6);
+    );
+  }
+
+  void _deleteBill(Bill bill) {
+    HapticFeedback.lightImpact();
+    context.read<BillBloc>().add(DeleteBill(bill.id));
+  }
+
+  void _splitBill(Bill bill) {
+    HapticFeedback.selectionClick();
+    context.read<PaymentPlansBloc>().add(CalculateSplit([bill]));
+    context.pushNamed('payment-plans');
   }
 
   Widget billCard(Bill bill) {
@@ -244,102 +263,169 @@ class _HomeScreenState extends State<HomeScreen> {
       onClick: () {
         context.pushNamed('bill', pathParameters: {'id': bill.id});
       },
-      child: ClipPath(
-        clipper: ReceiptClipper(),
-        child: Container(
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            boxShadow: [BoxShadow(color: context.colorScheme.shadow, blurRadius: 6, offset: const Offset(0, 2))],
-          ),
+      child: Container(
+        decoration: BoxDecoration(color: colorScheme.surface),
 
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                occasion,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              verticalSpace(12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      bill.paidBy,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              occasion,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            verticalSpace(12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    bill.paidBy,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  horizontalSpace(12),
-                  Text(
-                    '₹ ${bill.amount.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: colorScheme.primary,
-                      fontFeatures: const [FontFeature.tabularFigures(), FontFeature.slashedZero()],
-                    ),
+                ),
+                horizontalSpace(12),
+                Text(
+                  '₹ ${bill.amount.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.primary,
+                    fontFeatures: const [FontFeature.tabularFigures(), FontFeature.slashedZero()],
                   ),
-                ],
-              ),
-            ],
-          ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class ReceiptClipper extends CustomClipper<Path> {
-  final double zigzagDepth;
-  final double zigzagWidth;
+class _BillSlidableCard extends StatefulWidget {
+  const _BillSlidableCard({
+    super.key,
+    required this.bill,
+    required this.child,
+    required this.colorScheme,
+    required this.onDelete,
+    required this.onSplit,
+    required this.onPreviewCompleted,
+    required this.showPreview,
+  });
 
-  ReceiptClipper({this.zigzagDepth = 4, this.zigzagWidth = 6});
+  final Bill bill;
+  final Widget child;
+  final ColorScheme colorScheme;
+  final VoidCallback onDelete;
+  final VoidCallback onSplit;
+  final Future<void> Function() onPreviewCompleted;
+  final bool showPreview;
 
   @override
-  Path getClip(Size size) {
-    final path = Path();
+  State<_BillSlidableCard> createState() => _BillSlidableCardState();
+}
 
-    // Start at top-left with zigzag
-    path.moveTo(0, 0);
+class _BillSlidableCardState extends State<_BillSlidableCard> with SingleTickerProviderStateMixin {
+  late final SlidableController _controller;
+  bool _previewStarted = false;
 
-    // Top zigzag (from left to right)
-    double x = 0;
-
-    while (x < size.width) {
-      x += zigzagWidth / 2;
-      if (x > size.width) x = size.width;
-      path.lineTo(x, zigzagDepth);
-
-      x += zigzagWidth / 2;
-      if (x > size.width) x = size.width;
-      path.lineTo(x, 0);
-    }
-
-    // Right edge
-    path.lineTo(size.width, size.height);
-
-    // Bottom zigzag (from right to left)
-    while (x > 0) {
-      x -= zigzagWidth / 2;
-      if (x < 0) x = 0;
-      path.lineTo(x, size.height - zigzagDepth);
-
-      x -= zigzagWidth / 2;
-      if (x < 0) x = 0;
-      path.lineTo(x, size.height);
-    }
-
-    // Left edge back to start
-    path.lineTo(0, 0);
-    path.close();
-
-    return path;
+  @override
+  void initState() {
+    super.initState();
+    _controller = SlidableController(this);
+    _maybeRunPreview();
   }
 
   @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+  void didUpdateWidget(covariant _BillSlidableCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!oldWidget.showPreview && widget.showPreview) {
+      _maybeRunPreview();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _maybeRunPreview() {
+    if (_previewStarted || !widget.showPreview) {
+      return;
+    }
+
+    _previewStarted = true;
+    _runPreview();
+  }
+
+  Future<void> _runPreview() async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    await _waitUntilVisible();
+    if (!mounted) return;
+
+    await _controller.openStartActionPane(duration: const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+
+    await _controller.close(duration: const Duration(milliseconds: 300));
+    await Future.delayed(const Duration(milliseconds: 400));
+    await _waitUntilVisible();
+    if (!mounted) return;
+
+    await _controller.openEndActionPane(duration: const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 900));
+    if (!mounted) return;
+
+    await _controller.close(duration: const Duration(milliseconds: 300));
+    if (!mounted) return;
+
+    await widget.onPreviewCompleted();
+  }
+
+  Future<void> _waitUntilVisible() async {
+    while (mounted && ModalRoute.of(context)?.isCurrent != true) {
+      await Future.delayed(const Duration(milliseconds: 150));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = widget.colorScheme;
+    return Slidable(
+      key: ValueKey(widget.bill.id),
+      controller: _controller,
+      startActionPane: ActionPane(
+        extentRatio: 0.2,
+        motion: const DrawerMotion(),
+        children: [
+          SlidableAction(
+            onPressed: (_) => widget.onSplit(),
+            backgroundColor: colorScheme.primaryContainer,
+            foregroundColor: colorScheme.onPrimaryContainer,
+            icon: Icons.calculate_rounded,
+          ),
+        ],
+      ),
+      endActionPane: ActionPane(
+        extentRatio: 0.2,
+        motion: const DrawerMotion(),
+        dismissible: DismissiblePane(onDismissed: widget.onDelete),
+        children: [
+          SlidableAction(
+            onPressed: (_) => widget.onDelete(),
+            backgroundColor: colorScheme.error,
+            foregroundColor: colorScheme.onError,
+            icon: Icons.delete_outline,
+          ),
+        ],
+      ),
+      child: widget.child,
+    );
+  }
 }

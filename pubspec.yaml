@@ -38,6 +38,7 @@ dependencies:
   package_info_plus: ^9.0.0
   quick_actions: ^1.1.0
   pub_semver: ^2.2.0
+  flutter_slidable: ^4.0.1
 
 
 dev_dependencies:
