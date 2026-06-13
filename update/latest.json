@@ -1,11 +1,11 @@
 {
-  "latestVersion": "1.0.9",
-  "latestBuildNumber": 9,
+  "latestVersion": "1.0.10",
+  "latestBuildNumber": 10,
   "message": "update available",
   "releases": [
     {
-      "version": "1.0.9",
-      "buildNumber": 9,
+      "version": "1.0.10",
+      "buildNumber": 10,
       "changes": [
         "Bill Splitter has a new look! The app is now simpler to use and has a few new tricks up it's sleeve",
         "The default theme is now monochrome, more closely reflecting the website",
