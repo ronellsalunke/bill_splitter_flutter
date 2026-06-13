@@ -74,12 +74,12 @@ jobs:
       - name: Run build_runner
         run: dart run build_runner build
 
-      - name: Build Android APK (arm64-v8a, 4kb page file size)
-        run: flutter build apk --target-platform android-arm64 --split-per-abi
+      - name: Build Android APK (arm64-v8a)
+        run: flutter build apk --target-platform android-arm64
 
       - name: Rename APK
         run: |
-          mv build/app/outputs/flutter-apk/app-arm64-v8a-release.apk \
+          mv build/app/outputs/flutter-apk/app-release.apk \
              build/app/outputs/flutter-apk/bill-splitter-v${{ needs.version.outputs.version }}-arm64.apk
 
       - name: Upload APK artifact
