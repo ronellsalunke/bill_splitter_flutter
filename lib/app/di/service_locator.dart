@@ -64,5 +64,5 @@ Future<void> setupServiceLocator() async {
 
   getIt.registerFactory<BillBloc>(() => BillBloc(getIt<Box<Bill>>()));
   getIt.registerFactory<PaymentPlansBloc>(() => PaymentPlansBloc(getIt<AppRepository>()));
-  getIt.registerFactory<UpdateBloc>(() => UpdateBloc(getIt<AppRepository>()));
+  getIt.registerFactory<UpdateBloc>(() => UpdateBloc(getIt<AppRepository>(), getIt<SharedPreferences>()));
 }

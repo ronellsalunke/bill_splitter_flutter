@@ -60,8 +60,8 @@ class CommonOutlineButton extends StatelessWidget {
       style: OutlinedButton.styleFrom(
         backgroundColor: bgColor,
         foregroundColor: defaultTextColor,
-        disabledBackgroundColor: bgColor.withOpacity(0.5),
-        disabledForegroundColor: defaultTextColor?.withOpacity(0.5),
+        disabledBackgroundColor: bgColor.withValues(alpha: 0.5),
+        disabledForegroundColor: defaultTextColor?.withValues(alpha: 0.5),
         padding: padding,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(borderRadius),

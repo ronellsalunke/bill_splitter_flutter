@@ -1,5 +1,16 @@
 {
   "latestVersion": "1.0.9",
   "latestBuildNumber": 9,
-  "message": "update available"
+  "message": "update available",
+  "releases": [
+    {
+      "version": "1.0.9",
+      "buildNumber": 9,
+      "changes": [
+        "Bill Splitter has a new look! The app is now simpler to use and has a few new tricks up it's sleeve",
+        "The default theme is now monochrome, more closely reflecting the website",
+        "You can now swipe in from the left of card on the home screen to calculate splits for a single bill"
+      ]
+    }
+  ]
 }

@@ -6,23 +6,24 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
+import 'package:bs_flutter/app/modules/edit_bill/upload_image_source_sheet.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dropdown.dart';
 import 'package:bs_flutter/app/widgets/common_multi_dropdown.dart';
-import 'package:bs_flutter/app/widgets/common_outline_button.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
+import 'package:bs_flutter/utils/scroll_reveal_fab_mixin.dart';
 import 'package:bs_flutter/utils/swipe_hint_preferences.dart';
 import 'package:bs_flutter/utils/utility.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 const _everyoneSplitOption = '__everyone_split_option__';
 
@@ -37,7 +38,7 @@ class EditBillScreen extends StatefulWidget {
   State<EditBillScreen> createState() => _EditBillScreenState();
 }
 
-class _EditBillScreenState extends State<EditBillScreen> {
+class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMixin {
   final _formData = _BillFormData();
   final _occasionController = TextEditingController();
   final _amountController = TextEditingController();
@@ -55,6 +56,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
   @override
   void initState() {
     super.initState();
+    initScrollRevealController();
     // Check initial state for data population
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = context.read<BillBloc>().state;
@@ -149,56 +151,12 @@ class _EditBillScreenState extends State<EditBillScreen> {
   }
 
   Future<void> _onOcrTap() async {
-    final colorScheme = context.colorScheme;
-    final source = await showModalBottomSheet<ImageSource>(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(16),
-        child: SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text('upload image', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-              verticalSpace(12),
-              Row(
-                children: [
-                  Flexible(
-                    child: CommonButton(
-                      borderRadius: 8,
-                      text: 'gallery',
-                      icon: Icons.photo_library_rounded,
-                      iconColor: colorScheme.onPrimary,
-                      mainAxisSize: MainAxisSize.max,
-                      onTap: () {
-                        context.pop(ImageSource.gallery);
-                      },
-                    ),
-                  ),
-                  horizontalSpace(10),
-                  Flexible(
-                    child: CommonButton(
-                      borderRadius: 8,
-                      icon: Icons.camera_alt_rounded,
-                      iconColor: colorScheme.onPrimary,
-                      text: 'camera',
-                      mainAxisSize: MainAxisSize.max,
-                      onTap: () {
-                        context.pop(ImageSource.camera);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    final source = await showUploadImageSourceSheet(context);
+    if (!mounted) return;
     if (source == null) return;
 
     final image = await Utility.pickImage(context, source);
+    if (!mounted) return;
     if (image == null) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No image selected')));
       return;
@@ -219,6 +177,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     final colorScheme = context.colorScheme;
 
     final hasConnection = await Utility.hasInternetConnection();
+    if (!mounted) return;
     if (!hasConnection) {
       ScaffoldMessenger.of(
         context,
@@ -230,7 +189,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Center(child: CircularProgressIndicator(color: colorScheme.primary, year2023: false)),
+      builder: (context) => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
     );
     try {
       final repository = getIt<AppRepository>();
@@ -248,13 +207,14 @@ class _EditBillScreenState extends State<EditBillScreen> {
       if (isShared) getIt<ShareIntentService>().sharedImagePath = null;
       setState(() => _isOcrProcessing = false);
       if (mounted) {
-        Navigator.of(context).pop(); // dismiss loading dialog
+        context.pop(); // dismiss loading dialog
       }
     }
   }
 
   @override
   void dispose() {
+    disposeScrollRevealController();
     _participantsController.dispose();
     _participantsFocusNode.dispose();
     _occasionController.dispose();
@@ -319,6 +279,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
         return Scaffold(
           appBar: AppBar(title: Text(widget.billId == 'new' ? 'new bill' : 'edit bill'), centerTitle: false),
           body: SingleChildScrollView(
+            controller: scrollRevealController,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,34 +384,27 @@ class _EditBillScreenState extends State<EditBillScreen> {
               ],
             ),
           ),
+          floatingActionButton: buildScrollRevealFab(
+            child: FloatingActionButton(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(30)),
+              enableFeedback: true,
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              onPressed: _addItem,
+              child: const Icon(Icons.add),
+            ),
+          ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
             padding: const EdgeInsets.all(16),
             child: SafeArea(
-              child: Row(
-                children: [
-                  Flexible(
-                    child: CommonOutlineButton(
-                      text: 'add item',
-                      icon: Icons.add_circle,
-                      iconColor: colorScheme.primary,
-                      mainAxisSize: MainAxisSize.max,
-                      borderRadius: 8,
-                      onTap: _addItem,
-                    ),
-                  ),
-                  horizontalSpace(10),
-                  Flexible(
-                    child: CommonButton(
-                      text: 'save bill',
-                      mainAxisSize: MainAxisSize.max,
-                      borderRadius: 8,
-                      icon: Icons.save,
-                      iconColor: colorScheme.onPrimary,
-                      onTap: _saveBill,
-                    ),
-                  ),
-                ],
+              child: CommonButton(
+                text: 'save bill',
+                mainAxisSize: MainAxisSize.max,
+                borderRadius: 8,
+                icon: Icons.save,
+                iconColor: colorScheme.onPrimary,
+                onTap: _saveBill,
               ),
             ),
           ),
@@ -612,19 +566,34 @@ class _EditBillScreenState extends State<EditBillScreen> {
 
   Widget itemCard(int index) {
     final colorScheme = context.colorScheme;
-    return Dismissible(
+    return Slidable(
       key: ObjectKey(_formData.items[index]),
-      direction: DismissDirection.endToStart,
-      onDismissed: (direction) => setState(() {
-        HapticFeedback.lightImpact();
-        final removedItem = _formData.items.removeAt(index);
-        removedItem.dispose();
-      }),
-      background: Container(
-        decoration: BoxDecoration(color: colorScheme.error),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: Icon(Icons.delete_outline, color: colorScheme.onError),
+      endActionPane: ActionPane(
+        extentRatio: 0.2,
+        motion: const DrawerMotion(),
+        dismissible: DismissiblePane(
+          onDismissed: () {
+            setState(() {
+              HapticFeedback.lightImpact();
+              final removedItem = _formData.items.removeAt(index);
+              removedItem.dispose();
+            });
+          },
+        ),
+        children: [
+          SlidableAction(
+            onPressed: (_) {
+              setState(() {
+                HapticFeedback.lightImpact();
+                final removedItem = _formData.items.removeAt(index);
+                removedItem.dispose();
+              });
+            },
+            backgroundColor: colorScheme.error,
+            foregroundColor: colorScheme.onError,
+            icon: Icons.delete_outline,
+          ),
+        ],
       ),
       child: Container(
         decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(8)),

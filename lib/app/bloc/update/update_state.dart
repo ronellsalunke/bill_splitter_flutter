@@ -21,4 +21,13 @@ class UpdateAvailable extends UpdateState {
   List<Object?> get props => [manifest];
 }
 
+class UpdateChangelogAvailable extends UpdateState {
+  UpdateChangelogAvailable(this.release);
+
+  final UpdateRelease release;
+
+  @override
+  List<Object?> get props => [release];
+}
+
 class UpdateBannerDismissed extends UpdateState {}

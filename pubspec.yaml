@@ -13,32 +13,34 @@ dependencies:
     sdk: flutter
 
   flutter_bloc: ^9.1.1
-  flutter_svg: ^2.2.3
-  image_picker: ^1.2.1
-  dio: ^5.9.0
+  flutter_svg: ^2.3.0
+  image_picker: ^1.2.2
+  dio: ^5.9.2
   pretty_dio_logger: ^1.4.0
-  shared_preferences: ^2.5.3
+  shared_preferences: ^2.5.5
   dynamic_color: ^1.8.1
   url_launcher: ^6.3.2
-  json_annotation: ^4.11.0
+  json_annotation: ^4.12.0
   freezed_annotation: ^3.1.0
-  hive_ce: ^2.18.0
-  path_provider: ^2.1.4
-  go_router: ^17.0.1
-  connectivity_plus: ^7.0.0
+  hive_ce: ^2.19.3
+  path_provider: ^2.1.5
+  go_router: ^17.3.0
+  connectivity_plus: ^7.1.1
   equatable: ^2.0.8
   receive_sharing_intent:
     git:
       url: https://github.com/KasemJaffer/receive_sharing_intent.git
       ref: master
   share_plus: ^12.0.1
-  dropdown_button2: ^3.0.0
+  dropdown_button2: ^3.1.0
   get_it: ^9.2.1
   material_segmented_list: ^1.0.5
   package_info_plus: ^9.0.0
   quick_actions: ^1.1.0
   pub_semver: ^2.2.0
-  flutter_slidable: ^4.0.1
+  flutter_slidable: ^4.0.3
+  intl: ^0.20.2
+  stupid_simple_sheet: ^0.9.1+1
 
 
 dev_dependencies:
@@ -47,12 +49,12 @@ dev_dependencies:
     sdk: flutter
 
   flutter_lints: ^6.0.0
-  freezed: ^3.2.4
+  freezed: ^3.2.5
   hive_ce_generator: ^1.11.0
-  json_serializable: ^6.11.3
-  build_runner: ^2.10.4
+  json_serializable: ^6.14.0
+  build_runner: ^2.15.0
   #  bloc_test: ^10.0.0
-  mocktail: ^1.0.4
+  mocktail: ^1.0.5
   #  integration_test:
   #    sdk: flutter
 
@@ -67,6 +69,9 @@ flutter:
       fonts:
         - asset: assets/fonts/JetBrainsMono-VariableFont_wght.ttf
           weight: 400
+    - family: geist
+      fonts:
+        - asset: assets/fonts/geist.ttf
 
 sentry:
   upload_debug_symbols: true

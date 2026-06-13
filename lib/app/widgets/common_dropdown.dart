@@ -33,20 +33,8 @@ class CommonDropdown<T> extends StatelessWidget {
     final defaultTextColor = textColor ?? context.colorScheme.onSurface;
     final defaultBorderColor = borderColor ?? context.colorScheme.outline;
     final borderRadius = BorderRadius.circular(8);
-    final textStyle = TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      color: defaultTextColor,
-      height: 1.4,
-      fontFamily: 'jetbrains_mono',
-    );
-    final hintStyle = TextStyle(
-      fontSize: 14,
-      fontWeight: FontWeight.w400,
-      color: defaultHintColor,
-      height: 1.4,
-      fontFamily: 'jetbrains_mono',
-    );
+    final textStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: defaultTextColor, height: 1.4);
+    final hintStyle = TextStyle(fontSize: 14, fontWeight: FontWeight.w400, color: defaultHintColor, height: 1.4);
     final dropdownItems = items
         .map(
           (item) => DropdownItem<T>(

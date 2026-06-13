@@ -5,7 +5,7 @@ import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
 import 'package:bs_flutter/app/bloc/update/update_bloc.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
-import 'package:bs_flutter/app/res/app_colors.dart';
+import 'package:bs_flutter/app/theme/app_theme.dart';
 import 'package:bs_flutter/app/routes/router.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
@@ -116,31 +116,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     router.pushNamed('bill', pathParameters: {'id': 'new'});
   }
 
-  ThemeData _buildTheme(Brightness brightness, bool dynamicColors, ColorScheme? dynamicColorScheme) {
-    ColorScheme colorScheme;
-
-    if (dynamicColors && dynamicColorScheme != null) {
-      // use dynamic colors when available
-      colorScheme = dynamicColorScheme;
-    } else {
-      // fallback to default color scheme
-      colorScheme = ColorScheme.fromSeed(seedColor: Colors.lightGreenAccent, brightness: brightness);
-    }
-
-    return ThemeData(
-      colorScheme: colorScheme,
-      useMaterial3: true,
-      fontFamily: 'jetbrains_mono',
-      scaffoldBackgroundColor: brightness == Brightness.light ? AppColors.backgroundColorLight : AppColors.backgroundColorDark,
-      appBarTheme: AppBarTheme(
-        backgroundColor: brightness == Brightness.light ? AppColors.backgroundColorLight : AppColors.backgroundColorDark,
-        elevation: 0,
-        centerTitle: true,
-        scrolledUnderElevation: 0,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -157,8 +132,16 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
                 title: 'bill splitter',
-                theme: _buildTheme(Brightness.light, themeState.dynamicColorEnabled, lightDynamic),
-                darkTheme: _buildTheme(Brightness.dark, themeState.dynamicColorEnabled, darkDynamic),
+                theme: AppTheme.buildTheme(
+                  brightness: Brightness.light,
+                  dynamicColors: themeState.dynamicColorEnabled,
+                  dynamicColorScheme: lightDynamic,
+                ),
+                darkTheme: AppTheme.buildTheme(
+                  brightness: Brightness.dark,
+                  dynamicColors: themeState.dynamicColorEnabled,
+                  dynamicColorScheme: darkDynamic,
+                ),
                 themeMode: themeState.currentTheme,
                 routerConfig: router,
               );
