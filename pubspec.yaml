@@ -8,14 +8,14 @@ environment:
   sdk: ^3.10.4
 
 dependencies:
-  sentry_flutter: ^9.12.0
+  sentry_flutter: ^9.25.0
   flutter:
     sdk: flutter
 
   flutter_bloc: ^9.1.1
   flutter_svg: ^2.3.0
-  image_picker: ^1.2.2
-  dio: ^5.9.2
+  image_picker: ^1.2.3
+  dio: ^5.10.0
   pretty_dio_logger: ^1.4.0
   shared_preferences: ^2.5.5
   dynamic_color: ^1.8.1
@@ -23,28 +23,28 @@ dependencies:
   json_annotation: ^4.12.0
   freezed_annotation: ^3.1.0
   hive_ce: ^2.19.3
-  path_provider: ^2.1.5
+  path_provider: ^2.1.6
   go_router: ^17.3.0
-  connectivity_plus: ^7.1.1
-  equatable: ^2.0.8
+  connectivity_plus: ^7.3.1
+  equatable: ^2.1.0
   receive_sharing_intent:
     git:
       url: https://github.com/KasemJaffer/receive_sharing_intent.git
-      ref: master
-  share_plus: ^12.0.1
+      ref: 2cea396843cd3ab1b5ec4334be4233864637874e
+  share_plus: ^13.3.0
   dropdown_button2: ^3.1.0
   get_it: ^9.2.1
   material_segmented_list: ^1.0.5
-  package_info_plus: ^9.0.0
+  package_info_plus: ^10.2.1
   quick_actions: ^1.1.0
   pub_semver: ^2.2.0
   flutter_slidable: ^4.0.3
-  intl: ^0.20.2
+  intl: ^0.20.3
   stupid_simple_sheet: ^0.9.1+1
 
 
 dev_dependencies:
-  sentry_dart_plugin: ^3.2.1
+  sentry_dart_plugin: ^3.4.0
   flutter_test:
     sdk: flutter
 
