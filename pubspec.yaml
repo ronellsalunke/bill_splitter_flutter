@@ -65,10 +65,6 @@ flutter:
     - assets/icons/
 
   fonts:
-    - family: jetbrains_mono
-      fonts:
-        - asset: assets/fonts/JetBrainsMono-VariableFont_wght.ttf
-          weight: 400
     - family: geist
       fonts:
         - asset: assets/fonts/geist.ttf
