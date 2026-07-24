@@ -1,12 +1,10 @@
 import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
-import 'package:bs_flutter/app/res/app_icons.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -58,7 +56,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 SegmentedListSection(
                   children: [
                     SegmentedListTile(
-                      leading: Icon(Icons.palette_rounded, color: context.colorScheme.primary),
+                      leading: Icon(Icons.brightness_6_rounded, color: context.colorScheme.primary),
                       title: const Text('app theme', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       trailing: Text(
                         state.themeMode.name,
@@ -70,7 +68,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       },
                     ),
                     SegmentedListTile(
-                      leading: Icon(Icons.format_paint_rounded, color: context.colorScheme.primary),
+                      leading: Icon(Icons.palette_rounded, color: context.colorScheme.primary),
                       title: const Text('dynamic color', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       trailing: Switch(
                         value: state.dynamicColorEnabled,
@@ -108,25 +106,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ),
                     SegmentedListTile(
-                      leading: SvgPicture.asset(
-                        AppIcons.githubIcon,
-                        height: 24,
-                        width: 24,
-                        colorFilter: ColorFilter.mode(colorScheme.primary, BlendMode.srcIn),
-                      ),
+                      leading: Icon(Icons.code, color: context.colorScheme.primary),
                       title: const Text('github', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       onTap: () {
                         HapticFeedback.selectionClick();
                         launchUrl(Uri.parse('https://github.com/ronellsalunke/bill_splitter_flutter'));
                       },
+                      trailing: Icon(Icons.chevron_right_rounded, color: context.colorScheme.outline),
                     ),
                     SegmentedListTile(
-                      leading: Icon(Icons.code, color: context.colorScheme.primary),
+                      leading: Icon(Icons.copyright_rounded, color: context.colorScheme.primary),
                       title: const Text('licenses', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
                       onTap: () {
                         HapticFeedback.selectionClick();
                         context.pushNamed('licenses');
                       },
+                      trailing: Icon(Icons.chevron_right_rounded, color: context.colorScheme.outline),
                     ),
                   ],
                 ),
