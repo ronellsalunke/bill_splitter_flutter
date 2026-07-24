@@ -1,30 +1,22 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
-class ThemeState {
-  const ThemeState({required this.themeMode, required this.dynamicColorEnabled, this.colorScheme});
+class ThemeState extends Equatable {
+  const ThemeState({
+    required this.themeMode,
+    required this.dynamicColorEnabled,
+  });
 
   final ThemeMode themeMode;
   final bool dynamicColorEnabled;
-  final ColorScheme? colorScheme;
 
-  ThemeMode get currentTheme => themeMode;
-
-  String get themeModeName {
-    switch (themeMode) {
-      case ThemeMode.system:
-        return 'System';
-      case ThemeMode.light:
-        return 'Light';
-      case ThemeMode.dark:
-        return 'Dark';
-    }
-  }
-
-  ThemeState copyWith({ThemeMode? themeMode, bool? dynamicColorEnabled, ColorScheme? colorScheme}) {
+  ThemeState copyWith({ThemeMode? themeMode, bool? dynamicColorEnabled}) {
     return ThemeState(
       themeMode: themeMode ?? this.themeMode,
       dynamicColorEnabled: dynamicColorEnabled ?? this.dynamicColorEnabled,
-      colorScheme: colorScheme ?? this.colorScheme,
     );
   }
+
+  @override
+  List<Object> get props => [themeMode, dynamicColorEnabled];
 }

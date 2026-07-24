@@ -1,5 +1,4 @@
-import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
-import 'package:bs_flutter/app/bloc/theme/theme_event.dart';
+import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
 import 'package:bs_flutter/app/res/app_icons.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
@@ -44,7 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('settings'), centerTitle: false),
-      body: BlocBuilder<ThemeBloc, ThemeState>(
+      body: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, state) {
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -67,19 +66,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       onTap: () {
                         HapticFeedback.selectionClick();
-                        final ThemeMode nextMode;
-                        switch (state.themeMode) {
-                          case ThemeMode.system:
-                            nextMode = ThemeMode.light;
-                            break;
-                          case ThemeMode.light:
-                            nextMode = ThemeMode.dark;
-                            break;
-                          case ThemeMode.dark:
-                            nextMode = ThemeMode.system;
-                            break;
-                        }
-                        context.read<ThemeBloc>().add(ChangeThemeMode(nextMode));
+                        context.read<ThemeCubit>().cycleThemeMode();
                       },
                     ),
                     SegmentedListTile(
@@ -89,7 +76,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         value: state.dynamicColorEnabled,
                         onChanged: (value) {
                           HapticFeedback.selectionClick();
-                          context.read<ThemeBloc>().add(ToggleDynamicColor(value));
+                          context.read<ThemeCubit>().setDynamicColorEnabled(value);
                         },
                         thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
                           if (states.contains(WidgetState.selected)) {
@@ -100,7 +87,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       onTap: () {
                         HapticFeedback.selectionClick();
-                        context.read<ThemeBloc>().add(ToggleDynamicColor(!state.dynamicColorEnabled));
+                        context.read<ThemeCubit>().setDynamicColorEnabled(!state.dynamicColorEnabled);
                       },
                     ),
                   ],

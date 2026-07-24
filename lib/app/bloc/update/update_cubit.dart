@@ -7,47 +7,74 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'update_event.dart';
 import 'update_state.dart';
 
-class UpdateBloc extends Bloc<UpdateEvent, UpdateState> {
+class UpdateCubit extends Cubit<UpdateState> {
   static const _lastSeenBuildNumberKey = 'last_seen_build_number';
   static const _lastShownChangelogBuildNumberKey = 'last_shown_changelog_build_number';
 
-  final AppRepository _repository;
-  final SharedPreferences _prefs;
-  final Future<PackageInfo> Function() _packageInfoFactory;
-  final Future<UpdateManifest?> Function(PackageInfo packageInfo)? _debugManifestFactory;
-  bool _bannerDismissed = false;
-
-  UpdateBloc(
+  UpdateCubit(
     this._repository,
     this._prefs, {
     Future<PackageInfo> Function()? packageInfoFactory,
     Future<UpdateManifest?> Function(PackageInfo packageInfo)? debugManifestFactory,
   }) : _packageInfoFactory = packageInfoFactory ?? PackageInfo.fromPlatform,
        _debugManifestFactory = debugManifestFactory,
-       super(UpdateInitial()) {
-    on<CheckForUpdate>(_onCheckForUpdate);
-    on<DismissUpdateBanner>(_onDismissUpdateBanner);
-    on<AcknowledgeUpdateChangelog>(_onAcknowledgeUpdateChangelog);
-  }
+       super(UpdateInitial());
 
-  Future<void> _onCheckForUpdate(CheckForUpdate event, Emitter<UpdateState> emit) async {
+  final AppRepository _repository;
+  final SharedPreferences _prefs;
+  final Future<PackageInfo> Function() _packageInfoFactory;
+  final Future<UpdateManifest?> Function(PackageInfo packageInfo)? _debugManifestFactory;
+
+  bool _bannerDismissed = false;
+  Future<void>? _checkInProgress;
+
+  Future<void> checkForUpdate() {
     if (_bannerDismissed) {
       emit(UpdateBannerDismissed());
-      return;
+      return Future<void>.value();
     }
 
+    final checkInProgress = _checkInProgress;
+    if (checkInProgress != null) return checkInProgress;
+
+    late final Future<void> check;
+    check = _performCheck().whenComplete(() {
+      if (identical(_checkInProgress, check)) {
+        _checkInProgress = null;
+      }
+    });
+    _checkInProgress = check;
+    return check;
+  }
+
+  void dismissBanner() {
+    _bannerDismissed = true;
+    emit(UpdateBannerDismissed());
+  }
+
+  Future<void> acknowledgeChangelogAndRecheck() async {
+    final packageInfo = await _packageInfoFactory();
+    final currentBuildNumber = int.parse(packageInfo.buildNumber);
+    await _prefs.setInt(_lastShownChangelogBuildNumberKey, currentBuildNumber);
+    await checkForUpdate();
+  }
+
+  Future<void> _performCheck() async {
     emit(UpdateChecking());
+
     try {
       final packageInfo = await _packageInfoFactory();
+      if (_bannerDismissed) return;
+
       final debugManifest = _debugManifestFactory != null
           ? await _debugManifestFactory(packageInfo)
           : kDebugMode
           ? buildMockInstalledUpdateManifest(packageInfo)
           : null;
       final manifest = debugManifest ?? await _repository.fetchUpdateManifest();
+      if (_bannerDismissed) return;
 
       final currentVersion = Version.parse(packageInfo.version);
       final latestVersion = Version.parse(manifest.latestVersion.replaceFirst(RegExp('^v'), ''));
@@ -58,6 +85,7 @@ class UpdateBloc extends Bloc<UpdateEvent, UpdateState> {
 
       if (previousBuildNumber != currentBuildNumber) {
         await _prefs.setInt(_lastSeenBuildNumberKey, currentBuildNumber);
+        if (_bannerDismissed) return;
       }
 
       final hasUpgraded = previousBuildNumber != null && currentBuildNumber > previousBuildNumber;
@@ -75,27 +103,15 @@ class UpdateBloc extends Bloc<UpdateEvent, UpdateState> {
 
       if (shouldShowMockChangelog || shouldShowChangelog) {
         emit(UpdateChangelogAvailable(currentRelease));
-        return;
-      }
-
-      if (latestVersion > currentVersion && manifest.latestBuildNumber > currentBuildNumber) {
+      } else if (latestVersion > currentVersion && manifest.latestBuildNumber > currentBuildNumber) {
         emit(UpdateAvailable(manifest));
       } else {
         emit(UpdateNotAvailable());
       }
     } catch (_) {
-      emit(UpdateNotAvailable());
+      if (!_bannerDismissed) {
+        emit(UpdateNotAvailable());
+      }
     }
-  }
-
-  void _onDismissUpdateBanner(DismissUpdateBanner event, Emitter<UpdateState> emit) {
-    _bannerDismissed = true;
-    emit(UpdateBannerDismissed());
-  }
-
-  Future<void> _onAcknowledgeUpdateChangelog(AcknowledgeUpdateChangelog event, Emitter<UpdateState> emit) async {
-    final packageInfo = await _packageInfoFactory();
-    final currentBuildNumber = int.parse(packageInfo.buildNumber);
-    await _prefs.setInt(_lastShownChangelogBuildNumberKey, currentBuildNumber);
   }
 }

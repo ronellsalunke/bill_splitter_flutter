@@ -1,9 +1,9 @@
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
-import 'package:bs_flutter/app/bloc/theme/theme_bloc.dart';
+import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
-import 'package:bs_flutter/app/bloc/update/update_bloc.dart';
+import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/theme/app_theme.dart';
 import 'package:bs_flutter/app/routes/router.dart';
@@ -122,10 +122,10 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       providers: [
         BlocProvider(create: (context) => getIt<BillBloc>()..add(LoadBills())),
         BlocProvider(create: (context) => getIt<PaymentPlansBloc>()),
-        BlocProvider(create: (context) => getIt<UpdateBloc>()),
-        BlocProvider(create: (context) => getIt<ThemeBloc>()),
+        BlocProvider(create: (context) => getIt<UpdateCubit>()),
+        BlocProvider(create: (context) => getIt<ThemeCubit>()),
       ],
-      child: BlocBuilder<ThemeBloc, ThemeState>(
+      child: BlocBuilder<ThemeCubit, ThemeState>(
         builder: (context, themeState) {
           return DynamicColorBuilder(
             builder: (ColorScheme? lightDynamic, ColorScheme? darkDynamic) {
@@ -142,7 +142,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                   dynamicColors: themeState.dynamicColorEnabled,
                   dynamicColorScheme: darkDynamic,
                 ),
-                themeMode: themeState.currentTheme,
+                themeMode: themeState.themeMode,
                 routerConfig: router,
               );
             },

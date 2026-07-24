@@ -3,8 +3,7 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
-import 'package:bs_flutter/app/bloc/update/update_bloc.dart';
-import 'package:bs_flutter/app/bloc/update/update_event.dart';
+import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
 import 'package:bs_flutter/app/bloc/update/update_state.dart';
 import 'package:bs_flutter/app/data/endpoints.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
@@ -39,8 +38,9 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
     super.initState();
     initScrollRevealController();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       getIt<ShareIntentService>().checkPendingShareIntent();
-      context.read<UpdateBloc>().add(CheckForUpdate());
+      context.read<UpdateCubit>().checkForUpdate();
     });
   }
 
@@ -53,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
   @override
   Widget build(BuildContext context) {
     final colorScheme = context.colorScheme;
-    return BlocListener<UpdateBloc, UpdateState>(
+    return BlocListener<UpdateCubit, UpdateState>(
       listener: (context, updateState) {
         if (updateState is UpdateAvailable) {
           _showUpdateBanner(context, updateState);
@@ -194,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
             children: [
               TextButton(
                 onPressed: () {
-                  context.read<UpdateBloc>().add(DismissUpdateBanner());
+                  context.read<UpdateCubit>().dismissBanner();
                   launchUrl(Uri.parse(Endpoints.latestRelease), mode: LaunchMode.externalApplication);
                 },
                 child: const Text('update'),
@@ -203,7 +203,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
                 tooltip: 'close',
                 visualDensity: VisualDensity.compact,
                 onPressed: () {
-                  context.read<UpdateBloc>().add(DismissUpdateBanner());
+                  context.read<UpdateCubit>().dismissBanner();
                 },
                 icon: const Icon(Icons.close_rounded),
               ),
@@ -217,8 +217,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
   Future<void> _showUpdateChangelog(UpdateChangelogAvailable state) async {
     await showUpdateChangelogSheet(context, release: state.release);
     if (!mounted) return;
-    context.read<UpdateBloc>().add(AcknowledgeUpdateChangelog());
-    context.read<UpdateBloc>().add(CheckForUpdate());
+    await context.read<UpdateCubit>().acknowledgeChangelogAndRecheck();
   }
 
   Widget _buildAddNewBillButton() {
