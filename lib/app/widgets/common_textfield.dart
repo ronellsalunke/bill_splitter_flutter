@@ -21,7 +21,6 @@ class CommonTextField extends StatelessWidget {
   final Function(String)? onFieldSubmitted;
   final Function(String)? onChanged;
   final Function()? onTap;
-  final Function()? onTapOutside;
   final String? errorText;
   final Color? labelColor;
   final Color? hintColor;
@@ -51,7 +50,6 @@ class CommonTextField extends StatelessWidget {
     this.onFieldSubmitted,
     this.onChanged,
     this.onTap,
-    this.onTapOutside,
     this.errorText,
     this.labelColor,
     this.hintColor,
@@ -105,9 +103,7 @@ class CommonTextField extends StatelessWidget {
           validator: validator,
           onChanged: onChanged,
           onTapOutside: (_) {
-            if (onTapOutside != null) {
-              onTapOutside!();
-            }
+            FocusManager.instance.primaryFocus?.unfocus();
           },
           onFieldSubmitted:
               onFieldSubmitted ??

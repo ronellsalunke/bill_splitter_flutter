@@ -12,10 +12,10 @@ import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dropdown.dart';
 import 'package:bs_flutter/app/widgets/common_multi_dropdown.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
+import 'package:bs_flutter/app/widgets/quantity_stepper.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
-import 'package:bs_flutter/utils/scroll_reveal_fab_mixin.dart';
 import 'package:bs_flutter/utils/swipe_hint_preferences.dart';
 import 'package:bs_flutter/utils/utility.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
@@ -38,25 +38,27 @@ class EditBillScreen extends StatefulWidget {
   State<EditBillScreen> createState() => _EditBillScreenState();
 }
 
-class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMixin {
+class _EditBillScreenState extends State<EditBillScreen> {
   final _formData = _BillFormData();
   final _occasionController = TextEditingController();
   final _amountController = TextEditingController();
   final _taxController = TextEditingController(text: '5.0');
   final _serviceController = TextEditingController();
-  final GlobalKey<AnimatedListState> _listKey = GlobalKey();
   bool _isOcrProcessing = false;
 
   // Track participants globally for the bill
   final List<String> _participants = [];
   final _participantsController = TextEditingController();
   final _participantsFocusNode = FocusNode();
+  final _occasionFocusNode = FocusNode();
+  final _amountFocusNode = FocusNode();
+  final _taxFocusNode = FocusNode();
+  final _serviceFocusNode = FocusNode();
   DateTime? _existingCreatedAt;
 
   @override
   void initState() {
     super.initState();
-    initScrollRevealController();
     // Check initial state for data population
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final state = context.read<BillBloc>().state;
@@ -97,12 +99,11 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
         ..consumedBy = List<String>.from(item.consumedBy)
         ..nameController.text = item.name
         ..priceController.text = item.price.toString()
-        ..quantityController.text = item.quantity.toString()
         ..consumedByListenable.value = List<String>.from(item.consumedBy);
 
       _formData.items.add(formItem);
     }
-    // Trigger rebuild for AnimatedList
+    // Trigger a rebuild after replacing the editable items.
     setState(() {});
     _disposeItemsNextFrame(previousItems);
   }
@@ -134,8 +135,7 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
             ..quantity = item.quantity ?? 1
             ..consumedBy = []
             ..nameController.text = item.name ?? ''
-            ..priceController.text = (item.price ?? 0).toString()
-            ..quantityController.text = (item.quantity ?? 1).toString();
+            ..priceController.text = (item.price ?? 0).toString();
 
           _formData.items.add(formItem);
         }
@@ -214,13 +214,16 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
 
   @override
   void dispose() {
-    disposeScrollRevealController();
     _participantsController.dispose();
     _participantsFocusNode.dispose();
     _occasionController.dispose();
     _amountController.dispose();
     _taxController.dispose();
     _serviceController.dispose();
+    _occasionFocusNode.dispose();
+    _amountFocusNode.dispose();
+    _taxFocusNode.dispose();
+    _serviceFocusNode.dispose();
     _disposeAllItemControllers();
     super.dispose();
   }
@@ -279,7 +282,7 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
         return Scaffold(
           appBar: AppBar(title: Text(widget.billId == 'new' ? 'new bill' : 'edit bill'), centerTitle: false),
           body: SingleChildScrollView(
-            controller: scrollRevealController,
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,8 +324,11 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
                       label: 'Occasion *',
                       hintText: 'Dinner, outing, groceries',
                       controller: _occasionController,
+                      currentFocus: _occasionFocusNode,
+                      nextFocus: _amountFocusNode,
                       textCapitalization: TextCapitalization.words,
                       keyboardType: TextInputType.name,
+                      textInputAction: TextInputAction.next,
                       onChanged: (value) => _formData.occasion = value,
                     ),
                     verticalSpace(16),
@@ -342,7 +348,10 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
                       label: 'Amount paid',
                       hintText: '0.00',
                       controller: _amountController,
+                      currentFocus: _amountFocusNode,
+                      nextFocus: _taxFocusNode,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.next,
                     ),
                     verticalSpace(16),
                     Row(
@@ -352,7 +361,10 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
                             label: 'Tax (%)',
                             hintText: '5.0',
                             controller: _taxController,
+                            currentFocus: _taxFocusNode,
+                            nextFocus: _serviceFocusNode,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            textInputAction: TextInputAction.next,
                           ),
                         ),
                         horizontalSpace(10),
@@ -361,7 +373,10 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
                             label: 'Service (%)',
                             hintText: '0.0',
                             controller: _serviceController,
+                            currentFocus: _serviceFocusNode,
                             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            textInputAction: TextInputAction.next,
+                            onFieldSubmitted: (_) => _focusItemName(0),
                           ),
                         ),
                       ],
@@ -379,19 +394,26 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
-                  children: [Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList())],
+                  children: [
+                    Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList()),
+                    verticalSpace(12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _addItem(focusNewItem: true),
+                        icon: const Icon(Icons.add_rounded),
+                        label: const Text('add item'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(48),
+                          foregroundColor: colorScheme.primary,
+                          side: BorderSide(color: colorScheme.outline),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ),
-          floatingActionButton: buildScrollRevealFab(
-            child: FloatingActionButton(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(30)),
-              enableFeedback: true,
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              onPressed: _addItem,
-              child: const Icon(Icons.add),
             ),
           ),
           bottomNavigationBar: Container(
@@ -427,11 +449,57 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
     _participantsFocusNode.requestFocus();
   }
 
-  void _addItem() {
+  void _addItem({bool focusNewItem = false}) {
+    final item = _ItemFormData();
     setState(() {
-      _formData.items.add(_ItemFormData());
+      _formData.items.add(item);
     });
-    _listKey.currentState?.insertItem(_formData.items.length - 1);
+    HapticFeedback.selectionClick();
+
+    if (focusNewItem) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _requestFocus(item.nameFocusNode);
+        }
+      });
+    }
+  }
+
+  void _focusItemName(int index) {
+    if (index >= _formData.items.length) return;
+    _requestFocus(_formData.items[index].nameFocusNode);
+  }
+
+  void _focusNextItemName(int index) {
+    if (index == _formData.items.length - 1) {
+      _addItem(focusNewItem: true);
+      return;
+    }
+
+    _focusItemName(index + 1);
+  }
+
+  void _requestFocus(FocusNode focusNode) {
+    focusNode.requestFocus();
+    final fieldContext = focusNode.context;
+    if (fieldContext != null) {
+      Scrollable.ensureVisible(
+        fieldContext,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+      );
+    }
+  }
+
+  void _updateItemQuantity(int index, int delta) {
+    final item = _formData.items[index];
+    if (delta.isNegative && item.quantity == 1) return;
+
+    setState(() {
+      item.quantity += delta;
+    });
+    HapticFeedback.selectionClick();
   }
 
   Widget _formSection({required String title, Widget? trailing, bool showDivider = true, required List<Widget> children}) {
@@ -509,6 +577,7 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
   }
 
   Future<void> _saveBill() async {
+    FocusManager.instance.primaryFocus?.unfocus();
     final occasion = _occasionController.text.trim();
     final billBloc = context.read<BillBloc>();
     final router = GoRouter.of(context);
@@ -604,9 +673,12 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
             CommonTextField(
               hintText: 'item name',
               controller: _formData.items[index].nameController,
+              currentFocus: _formData.items[index].nameFocusNode,
+              nextFocus: _formData.items[index].priceFocusNode,
               onChanged: (value) => _formData.items[index].name = value,
               textCapitalization: TextCapitalization.words,
               keyboardType: TextInputType.name,
+              textInputAction: TextInputAction.next,
             ),
             verticalSpace(8),
             Row(
@@ -615,17 +687,19 @@ class _EditBillScreenState extends State<EditBillScreen> with ScrollRevealFabMix
                   child: CommonTextField(
                     hintText: 'price',
                     controller: _formData.items[index].priceController,
+                    currentFocus: _formData.items[index].priceFocusNode,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.next,
                     onChanged: (value) => _formData.items[index].price = double.tryParse(value) ?? 0.0,
+                    onFieldSubmitted: (_) => _focusNextItemName(index),
                   ),
                 ),
                 horizontalSpace(12),
                 Expanded(
-                  child: CommonTextField(
-                    hintText: 'quantity',
-                    controller: _formData.items[index].quantityController,
-                    keyboardType: TextInputType.number,
-                    onChanged: (value) => _formData.items[index].quantity = int.tryParse(value) ?? 1,
+                  child: QuantityStepper(
+                    value: _formData.items[index].quantity,
+                    onDecrement: _formData.items[index].quantity > 1 ? () => _updateItemQuantity(index, -1) : null,
+                    onIncrement: () => _updateItemQuantity(index, 1),
                   ),
                 ),
               ],
@@ -659,13 +733,15 @@ class _ItemFormData {
   ValueNotifier<List<String>> consumedByListenable = ValueNotifier<List<String>>([]);
   TextEditingController nameController = TextEditingController();
   TextEditingController priceController = TextEditingController();
-  TextEditingController quantityController = TextEditingController(text: '1');
+  FocusNode nameFocusNode = FocusNode();
+  FocusNode priceFocusNode = FocusNode();
 
   void dispose() {
     consumedByListenable.dispose();
     nameController.dispose();
     priceController.dispose();
-    quantityController.dispose();
+    nameFocusNode.dispose();
+    priceFocusNode.dispose();
   }
 }
 
