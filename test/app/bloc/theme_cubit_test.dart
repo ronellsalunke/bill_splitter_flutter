@@ -1,6 +1,5 @@
 import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -11,17 +10,17 @@ Future<ThemeCubit> _createCubit(Map<String, Object> initialValues) async {
 
 void main() {
   test('loads persisted preferences synchronously', () async {
-    final cubit = await _createCubit({'themeMode': ThemeMode.dark.index, 'dynamicColorEnabled': true});
+    final cubit = await _createCubit({'themeMode': AppThemeMode.dark.index, 'dynamicColorEnabled': true});
 
-    expect(cubit.state, const ThemeState(themeMode: ThemeMode.dark, dynamicColorEnabled: true));
+    expect(cubit.state, const ThemeState(themeMode: AppThemeMode.dark, dynamicColorEnabled: true));
 
     await cubit.close();
   });
 
   test('falls back to system theme for an invalid stored index', () async {
-    final cubit = await _createCubit({'themeMode': ThemeMode.values.length});
+    final cubit = await _createCubit({'themeMode': AppThemeMode.values.length});
 
-    expect(cubit.state.themeMode, ThemeMode.system);
+    expect(cubit.state.themeMode, AppThemeMode.system);
 
     await cubit.close();
   });
@@ -32,20 +31,20 @@ void main() {
     final subscription = cubit.stream.listen(emittedStates.add);
 
     await cubit.cycleThemeMode();
-    expect(cubit.state.themeMode, ThemeMode.light);
+    expect(cubit.state.themeMode, AppThemeMode.light);
 
     await cubit.cycleThemeMode();
-    expect(cubit.state.themeMode, ThemeMode.dark);
+    expect(cubit.state.themeMode, AppThemeMode.dark);
 
     await cubit.cycleThemeMode();
-    expect(cubit.state.themeMode, ThemeMode.system);
+    expect(cubit.state.themeMode, AppThemeMode.system);
 
     expect(emittedStates, [
-      const ThemeState(themeMode: ThemeMode.light, dynamicColorEnabled: false),
-      const ThemeState(themeMode: ThemeMode.dark, dynamicColorEnabled: false),
-      const ThemeState(themeMode: ThemeMode.system, dynamicColorEnabled: false),
+      const ThemeState(themeMode: AppThemeMode.light, dynamicColorEnabled: false),
+      const ThemeState(themeMode: AppThemeMode.dark, dynamicColorEnabled: false),
+      const ThemeState(themeMode: AppThemeMode.system, dynamicColorEnabled: false),
     ]);
-    expect((await SharedPreferences.getInstance()).getInt('themeMode'), ThemeMode.system.index);
+    expect((await SharedPreferences.getInstance()).getInt('themeMode'), AppThemeMode.system.index);
 
     await subscription.cancel();
     await cubit.close();

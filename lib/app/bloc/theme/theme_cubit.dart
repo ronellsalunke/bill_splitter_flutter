@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -14,15 +13,15 @@ class ThemeCubit extends Cubit<ThemeState> {
 
   Future<void> cycleThemeMode() {
     final nextMode = switch (state.themeMode) {
-      ThemeMode.system => ThemeMode.light,
-      ThemeMode.light => ThemeMode.dark,
-      ThemeMode.dark => ThemeMode.system,
+      AppThemeMode.system => AppThemeMode.light,
+      AppThemeMode.light => AppThemeMode.dark,
+      AppThemeMode.dark => AppThemeMode.system,
     };
 
     return setThemeMode(nextMode);
   }
 
-  Future<void> setThemeMode(ThemeMode themeMode) async {
+  Future<void> setThemeMode(AppThemeMode themeMode) async {
     if (themeMode == state.themeMode) return;
 
     emit(state.copyWith(themeMode: themeMode));
@@ -38,9 +37,9 @@ class ThemeCubit extends Cubit<ThemeState> {
 
   static ThemeState _initialState(SharedPreferences prefs) {
     final storedThemeIndex = prefs.getInt(_themeModeKey);
-    final themeMode = storedThemeIndex != null && storedThemeIndex >= 0 && storedThemeIndex < ThemeMode.values.length
-        ? ThemeMode.values[storedThemeIndex]
-        : ThemeMode.system;
+    final themeMode = storedThemeIndex != null && storedThemeIndex >= 0 && storedThemeIndex < AppThemeMode.values.length
+        ? AppThemeMode.values[storedThemeIndex]
+        : AppThemeMode.system;
 
     return ThemeState(themeMode: themeMode, dynamicColorEnabled: prefs.getBool(_dynamicColorEnabledKey) ?? false);
   }

@@ -66,6 +66,22 @@ void main() {
     await cubit.close();
   });
 
+  test('uses the mock manifest when debug mode is injected', () async {
+    final cubit = UpdateCubit(
+      repository,
+      prefs,
+      isDebugMode: true,
+      packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
+    );
+    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateChangelogAvailable>()]));
+
+    await cubit.checkForUpdate();
+
+    await expectation;
+    verifyNever(() => repository.fetchUpdateManifest());
+    await cubit.close();
+  });
+
   test('emits no update when only version is newer', () async {
     when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.8', buildNumber: 7));
     final cubit = UpdateCubit(

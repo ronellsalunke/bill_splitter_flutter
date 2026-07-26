@@ -1,7 +1,6 @@
 import 'package:bs_flutter/app/models/update/mock_update_manifest.dart';
 import 'package:bs_flutter/app/models/update/update_manifest.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:pub_semver/pub_semver.dart';
@@ -16,14 +15,17 @@ class UpdateCubit extends Cubit<UpdateState> {
   UpdateCubit(
     this._repository,
     this._prefs, {
+    bool isDebugMode = false,
     Future<PackageInfo> Function()? packageInfoFactory,
     Future<UpdateManifest?> Function(PackageInfo packageInfo)? debugManifestFactory,
-  }) : _packageInfoFactory = packageInfoFactory ?? PackageInfo.fromPlatform,
+  }) : _isDebugMode = isDebugMode,
+       _packageInfoFactory = packageInfoFactory ?? PackageInfo.fromPlatform,
        _debugManifestFactory = debugManifestFactory,
        super(UpdateInitial());
 
   final AppRepository _repository;
   final SharedPreferences _prefs;
+  final bool _isDebugMode;
   final Future<PackageInfo> Function() _packageInfoFactory;
   final Future<UpdateManifest?> Function(PackageInfo packageInfo)? _debugManifestFactory;
 
@@ -70,7 +72,7 @@ class UpdateCubit extends Cubit<UpdateState> {
 
       final debugManifest = _debugManifestFactory != null
           ? await _debugManifestFactory(packageInfo)
-          : kDebugMode
+          : _isDebugMode
           ? buildMockInstalledUpdateManifest(packageInfo)
           : null;
       final manifest = debugManifest ?? await _repository.fetchUpdateManifest();
@@ -95,7 +97,7 @@ class UpdateCubit extends Cubit<UpdateState> {
           currentRelease != null &&
           currentRelease.changes.isNotEmpty;
       final shouldShowMockChangelog =
-          kDebugMode &&
+          _isDebugMode &&
           manifest.debugForceShowInstalledReleaseChangelog &&
           shownChangelogBuildNumber != currentBuildNumber &&
           currentRelease != null &&

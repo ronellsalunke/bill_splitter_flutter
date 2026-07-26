@@ -1,16 +1,14 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/material.dart';
+
+enum AppThemeMode { system, light, dark }
 
 class ThemeState extends Equatable {
-  const ThemeState({
-    required this.themeMode,
-    required this.dynamicColorEnabled,
-  });
+  const ThemeState({required this.themeMode, required this.dynamicColorEnabled});
 
-  final ThemeMode themeMode;
+  final AppThemeMode themeMode;
   final bool dynamicColorEnabled;
 
-  ThemeState copyWith({ThemeMode? themeMode, bool? dynamicColorEnabled}) {
+  ThemeState copyWith({AppThemeMode? themeMode, bool? dynamicColorEnabled}) {
     return ThemeState(
       themeMode: themeMode ?? this.themeMode,
       dynamicColorEnabled: dynamicColorEnabled ?? this.dynamicColorEnabled,

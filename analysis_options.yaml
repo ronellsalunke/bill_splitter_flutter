@@ -6,3 +6,11 @@ linter:
     prefer_single_quotes: true
     prefer_const_constructors: true
     avoid_relative_lib_imports: true
+
+bloc:
+  rules:
+    - avoid_flutter_imports
+    - avoid_public_bloc_methods
+    - avoid_public_fields
+    - prefer_file_naming_conventions
+    - prefer_void_public_cubit_methods

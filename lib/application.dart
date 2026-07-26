@@ -15,6 +15,14 @@ import 'package:quick_actions/quick_actions.dart';
 
 const _newBillShortcutType = 'new_bill_shortcut';
 
+extension on AppThemeMode {
+  ThemeMode get flutterThemeMode => switch (this) {
+    AppThemeMode.system => ThemeMode.system,
+    AppThemeMode.light => ThemeMode.light,
+    AppThemeMode.dark => ThemeMode.dark,
+  };
+}
+
 class BillSplitterApplication extends StatefulWidget {
   const BillSplitterApplication({super.key});
 
@@ -114,7 +122,7 @@ class _BillSplitterApplicationState extends State<BillSplitterApplication> with 
                   dynamicColors: themeState.dynamicColorEnabled,
                   dynamicColorScheme: darkDynamic,
                 ),
-                themeMode: themeState.themeMode,
+                themeMode: themeState.themeMode.flutterThemeMode,
                 routerConfig: router,
               );
             },
