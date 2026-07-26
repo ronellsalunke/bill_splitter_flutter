@@ -1,8 +1,17 @@
 {
-  "latestVersion": "1.0.10",
-  "latestBuildNumber": 10,
+  "latestVersion": "1.0.11",
+  "latestBuildNumber": 11,
   "message": "update available",
   "releases": [
+    {
+      "version": "1.0.11",
+      "buildNumber": 11,
+      "changes": [
+        "Added minus and plus buttons for item quantity selection",
+        "Added keyboard focus detection and handling for ease of use",
+        "Plus, a bunch of under the hood updates focused on performance and stability"
+      ]
+    },
     {
       "version": "1.0.10",
       "buildNumber": 10,
