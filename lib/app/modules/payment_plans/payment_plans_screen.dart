@@ -250,7 +250,7 @@ class _PaymentInstructionTile extends SegmentedListTile {
   _PaymentInstructionTile({required _PaymentInstruction instruction, required Color amountColor})
     : super(
         title: Text(
-          '${instruction.from.toCapitalized} -> ${instruction.to.toCapitalized}',
+          '${instruction.from.toCapitalized} → ${instruction.to.toCapitalized}',
           style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           overflow: TextOverflow.ellipsis,
         ),

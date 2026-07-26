@@ -50,14 +50,14 @@ class CommonButton extends StatelessWidget {
     final defaultTextColor = textColor ?? Theme.of(context).colorScheme.onPrimary;
     final bgColor = backgroundColor ?? Theme.of(context).colorScheme.primary;
 
-    return ElevatedButton(
+    return FilledButton(
       onPressed: enabled
           ? () {
               HapticFeedback.selectionClick();
               onTap?.call();
             }
           : null,
-      style: ElevatedButton.styleFrom(
+      style: FilledButton.styleFrom(
         backgroundColor: bgColor,
         foregroundColor: defaultTextColor,
         disabledBackgroundColor: bgColor.withValues(alpha: 0.5),
