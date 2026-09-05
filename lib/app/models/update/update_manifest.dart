@@ -10,7 +10,6 @@ abstract class UpdateManifest with _$UpdateManifest {
     required String latestVersion,
     required int latestBuildNumber,
     String? message,
-    @Default(false) bool debugForceShowInstalledReleaseChangelog,
     @Default(<UpdateRelease>[]) List<UpdateRelease> releases,
   }) = _UpdateManifest;
 

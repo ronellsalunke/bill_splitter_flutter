@@ -63,7 +63,5 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<BillBloc>(() => BillBloc(getIt<Box<Bill>>()));
   getIt.registerFactory<PaymentPlansCubit>(() => PaymentPlansCubit(getIt<AppRepository>()));
   getIt.registerFactory<ThemeCubit>(() => ThemeCubit(getIt<SharedPreferences>()));
-  getIt.registerFactory<UpdateCubit>(
-    () => UpdateCubit(getIt<AppRepository>(), getIt<SharedPreferences>(), isDebugMode: kDebugMode),
-  );
+  getIt.registerFactory<UpdateCubit>(() => UpdateCubit(getIt<AppRepository>(), getIt<SharedPreferences>()),);
 }

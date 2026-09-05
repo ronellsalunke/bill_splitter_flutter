@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:bs_flutter/app/data/base_api_services.dart';
@@ -66,6 +67,9 @@ class AppRepository {
   Future<UpdateManifest> fetchUpdateManifest() async {
     try {
       dynamic response = await _apiServices.getGetApiResponse(Endpoints.updateManifest);
+      if (response is String) {
+        response = jsonDecode(response);
+      }
       return UpdateManifest.fromJson(response);
     } catch (e) {
       rethrow;

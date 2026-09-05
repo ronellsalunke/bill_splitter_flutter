@@ -1,4 +1,3 @@
-import 'package:bs_flutter/app/models/update/mock_update_manifest.dart';
 import 'package:bs_flutter/app/models/update/update_manifest.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -15,19 +14,14 @@ class UpdateCubit extends Cubit<UpdateState> {
   UpdateCubit(
     this._repository,
     this._prefs, {
-    bool isDebugMode = false,
     Future<PackageInfo> Function()? packageInfoFactory,
-    Future<UpdateManifest?> Function(PackageInfo packageInfo)? debugManifestFactory,
-  }) : _isDebugMode = isDebugMode,
-       _packageInfoFactory = packageInfoFactory ?? PackageInfo.fromPlatform,
-       _debugManifestFactory = debugManifestFactory,
+      })
+      : _packageInfoFactory = packageInfoFactory ?? PackageInfo.fromPlatform,
        super(UpdateInitial());
 
   final AppRepository _repository;
   final SharedPreferences _prefs;
-  final bool _isDebugMode;
   final Future<PackageInfo> Function() _packageInfoFactory;
-  final Future<UpdateManifest?> Function(PackageInfo packageInfo)? _debugManifestFactory;
 
   bool _bannerDismissed = false;
   Future<void>? _checkInProgress;
@@ -70,12 +64,7 @@ class UpdateCubit extends Cubit<UpdateState> {
       final packageInfo = await _packageInfoFactory();
       if (_bannerDismissed) return;
 
-      final debugManifest = _debugManifestFactory != null
-          ? await _debugManifestFactory(packageInfo)
-          : _isDebugMode
-          ? buildMockInstalledUpdateManifest(packageInfo)
-          : null;
-      final manifest = debugManifest ?? await _repository.fetchUpdateManifest();
+      final manifest = await _repository.fetchUpdateManifest();
       if (_bannerDismissed) return;
 
       final currentVersion = Version.parse(packageInfo.version);
@@ -85,27 +74,24 @@ class UpdateCubit extends Cubit<UpdateState> {
       final shownChangelogBuildNumber = _prefs.getInt(_lastShownChangelogBuildNumberKey);
       final currentRelease = manifest.releaseFor(version: packageInfo.version, buildNumber: currentBuildNumber);
 
-      if (previousBuildNumber != currentBuildNumber) {
-        await _prefs.setInt(_lastSeenBuildNumberKey, currentBuildNumber);
-        if (_bannerDismissed) return;
-      }
-
       final hasUpgraded = previousBuildNumber != null && currentBuildNumber > previousBuildNumber;
       final shouldShowChangelog =
           hasUpgraded &&
           shownChangelogBuildNumber != currentBuildNumber &&
           currentRelease != null &&
           currentRelease.changes.isNotEmpty;
-      final shouldShowMockChangelog =
-          _isDebugMode &&
-          manifest.debugForceShowInstalledReleaseChangelog &&
-          shownChangelogBuildNumber != currentBuildNumber &&
-          currentRelease != null &&
-          currentRelease.changes.isNotEmpty;
 
-      if (shouldShowMockChangelog || shouldShowChangelog) {
+      // Do not consume the upgrade signal while the manifest doesn't list the
+      // current build yet (e.g. stale cache). Otherwise the changelog is lost forever.
+      final shouldDeferSeenMarker = hasUpgraded && currentRelease == null;
+      if (!shouldDeferSeenMarker && previousBuildNumber != currentBuildNumber) {
+        await _prefs.setInt(_lastSeenBuildNumberKey, currentBuildNumber);
+        if (_bannerDismissed) return;
+      }
+
+      if (shouldShowChangelog) {
         emit(UpdateChangelogAvailable(currentRelease));
-      } else if (latestVersion > currentVersion && manifest.latestBuildNumber > currentBuildNumber) {
+      } else if (latestVersion > currentVersion || manifest.latestBuildNumber > currentBuildNumber) {
         emit(UpdateAvailable(manifest));
       } else {
         emit(UpdateNotAvailable());

@@ -40,7 +40,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
     final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateAvailable>()]));
 
@@ -56,7 +55,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
     final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>()]));
 
@@ -66,31 +64,14 @@ void main() {
     await cubit.close();
   });
 
-  test('uses the mock manifest when debug mode is injected', () async {
-    final cubit = UpdateCubit(
-      repository,
-      prefs,
-      isDebugMode: true,
-      packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-    );
-    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateChangelogAvailable>()]));
-
-    await cubit.checkForUpdate();
-
-    await expectation;
-    verifyNever(() => repository.fetchUpdateManifest());
-    await cubit.close();
-  });
-
-  test('emits no update when only version is newer', () async {
+  test('emits update available when only version is newer', () async {
     when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.8', buildNumber: 7));
     final cubit = UpdateCubit(
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
-    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>()]));
+    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateAvailable>()]));
 
     await cubit.checkForUpdate();
 
@@ -98,15 +79,14 @@ void main() {
     await cubit.close();
   });
 
-  test('emits no update when only build is newer', () async {
+  test('emits update available when only build is newer', () async {
     when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.7', buildNumber: 8));
     final cubit = UpdateCubit(
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
-    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>()]));
+    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateAvailable>()]));
 
     await cubit.checkForUpdate();
 
@@ -120,7 +100,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
     final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>()]));
 
@@ -136,7 +115,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
     final expectation = expectLater(cubit.stream, emits(isA<UpdateBannerDismissed>()));
 
@@ -155,7 +133,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () => packageInfoCompleter.future,
-      debugManifestFactory: (_) async => null,
     );
     final emittedStates = <UpdateState>[];
     final subscription = cubit.stream.listen(emittedStates.add);
@@ -178,7 +155,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () => packageInfoCompleter.future,
-      debugManifestFactory: (_) async => null,
     );
     final emittedStates = <UpdateState>[];
     final subscription = cubit.stream.listen(emittedStates.add);
@@ -205,7 +181,6 @@ void main() {
       repository,
       prefs,
       packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
-      debugManifestFactory: (_) async => null,
     );
     final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>()]));
 
@@ -213,6 +188,51 @@ void main() {
 
     await expectation;
     expect(prefs.getInt('last_shown_changelog_build_number'), 7);
+    await cubit.close();
+  });
+
+  test('defers changelog instead of losing it when manifest lacks the current release', () async {
+    await prefs.setInt('last_seen_build_number', 7);
+    var fetchCount = 0;
+    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async {
+      fetchCount++;
+      if (fetchCount == 1) {
+        return UpdateManifest(
+          latestVersion: '1.0.8',
+          latestBuildNumber: 8,
+          message: 'Update available',
+          releases: [UpdateRelease(version: '1.0.7', buildNumber: 7, changes: const ['old news'])],
+        );
+      }
+      return UpdateManifest(
+        latestVersion: '1.0.8',
+        latestBuildNumber: 8,
+        message: 'Update available',
+        releases: [UpdateRelease(version: '1.0.8', buildNumber: 8, changes: const ['new stuff'])],
+      );
+    });
+    final cubit = UpdateCubit(
+      repository,
+      prefs,
+      packageInfoFactory: () async => _packageInfo(version: '1.0.8', buildNumber: '8'),
+    );
+    final expectation = expectLater(
+      cubit.stream,
+      emitsInOrder([
+        isA<UpdateChecking>(),
+        isA<UpdateNotAvailable>(),
+        isA<UpdateChecking>(),
+        isA<UpdateChangelogAvailable>(),
+      ]),
+    );
+
+    await cubit.checkForUpdate();
+    expect(prefs.getInt('last_seen_build_number'), 7);
+
+    await cubit.checkForUpdate();
+
+    await expectation;
+    expect(prefs.getInt('last_seen_build_number'), 8);
     await cubit.close();
   });
 }

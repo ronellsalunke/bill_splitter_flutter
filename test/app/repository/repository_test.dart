@@ -63,7 +63,15 @@ void main() {
       };
       when(() => mockApiService.getPostApiResponse(any(), any())).thenAnswer((_) async => mockResponse);
 
-      final bills = [Bill(id: '1', paidBy: 'Alice', amount: 25.0, tax: 2.0, service: 1.0, items: [], createdAt: DateTime.now())];
+      final bills = [
+        Bill(id: '1',
+            paidBy: 'Alice',
+            amount: 25.0,
+            tax: 2.0,
+            service: 1.0,
+            items: [],
+            createdAt: DateTime.now())
+      ];
       final result = await repository.calculateSplit(bills);
 
       expect(result, isA<SplitModel>());
@@ -71,15 +79,17 @@ void main() {
       verify(() => mockApiService.getPostApiResponse(any(), any())).called(1);
     });
 
-    test('fetchUpdateManifest success', () async {
-      final mockResponse = {'latestVersion': '1.0.8', 'latestBuildNumber': 8, 'message': 'Update available'};
+    test('fetchUpdateManifest decodes text/plain string bodies', () async {
+      const mockResponse =
+          '{"latestVersion":"1.0.8","latestBuildNumber":8,"message":"Update available",'
+          '"releases":[{"version":"1.0.8","buildNumber":8,"changes":["new stuff"]}]}';
       when(() => mockApiService.getGetApiResponse(any())).thenAnswer((_) async => mockResponse);
 
       final result = await repository.fetchUpdateManifest();
 
       expect(result.latestVersion, '1.0.8');
       expect(result.latestBuildNumber, 8);
-      expect(result.message, 'Update available');
+      expect(result.releases.single.changes, ['Update available']);
       verify(() => mockApiService.getGetApiResponse(any())).called(1);
     });
 
