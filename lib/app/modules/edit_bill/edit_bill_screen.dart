@@ -203,10 +203,9 @@ class _EditBillScreenState extends State<EditBillScreen> {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to process receipt: ${e.toString()}')));
       }
     } finally {
-      await image.delete();
       if (isShared) getIt<ShareIntentService>().sharedImagePath = null;
-      setState(() => _isOcrProcessing = false);
       if (mounted) {
+        setState(() => _isOcrProcessing = false);
         context.pop(); // dismiss loading dialog
       }
     }
