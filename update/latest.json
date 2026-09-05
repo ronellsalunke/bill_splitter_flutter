@@ -1,8 +1,16 @@
 {
-  "latestVersion": "1.0.11",
-  "latestBuildNumber": 11,
+  "latestVersion": "1.0.12",
+  "latestBuildNumber": 12,
   "message": "update available",
   "releases": [
+    {
+      "version": "1.0.12",
+      "buildNumber": 12,
+      "changes": [
+        "Fix bug where the back gesture would close the edit screen",
+        "Updates to dynamic color theming"
+      ]
+    },
     {
       "version": "1.0.11",
       "buildNumber": 11,
