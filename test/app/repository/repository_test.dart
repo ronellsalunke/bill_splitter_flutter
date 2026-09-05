@@ -89,7 +89,8 @@ void main() {
 
       expect(result.latestVersion, '1.0.8');
       expect(result.latestBuildNumber, 8);
-      expect(result.releases.single.changes, ['Update available']);
+      expect(result.message, 'Update available');
+      expect(result.releases.single.changes, ['new stuff']);
       verify(() => mockApiService.getGetApiResponse(any())).called(1);
     });
 

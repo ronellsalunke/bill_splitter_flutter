@@ -22,9 +22,9 @@ void main() {
       );
 
       expect(find.text('Test Button'), findsOneWidget);
-      expect(find.byType(ElevatedButton), findsOneWidget);
+      expect(find.byType(FilledButton), findsOneWidget);
 
-      await tester.tap(find.byType(ElevatedButton));
+      await tester.tap(find.byType(FilledButton));
       expect(pressed, true);
     });
   });

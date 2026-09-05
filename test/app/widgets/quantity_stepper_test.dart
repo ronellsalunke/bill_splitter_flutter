@@ -1,3 +1,4 @@
+import 'package:bs_flutter/app/theme/app_theme.dart';
 import 'package:bs_flutter/app/widgets/quantity_stepper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,6 +9,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+        theme: AppTheme.buildTheme(brightness: Brightness.light, dynamicColors: false, dynamicColorScheme: null),
         home: StatefulBuilder(
           builder: (context, setState) {
             return Scaffold(
