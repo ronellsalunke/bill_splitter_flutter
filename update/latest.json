@@ -4,6 +4,15 @@
   "message": "update available",
   "releases": [
     {
+      "version": "1.0.13",
+      "buildNumber": 13,
+      "changes": [
+        "Fix bug where the back gesture would close the Edit Bill screen",
+        "Fix a crash in Edit Bill screen",
+        "Updates to dynamic color theming"
+      ]
+    },
+    {
       "version": "1.0.12",
       "buildNumber": 12,
       "changes": [
