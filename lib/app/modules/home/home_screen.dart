@@ -1,8 +1,7 @@
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
-import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
-import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_event.dart';
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_cubit.dart';
 import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
 import 'package:bs_flutter/app/bloc/update/update_state.dart';
 import 'package:bs_flutter/app/data/endpoints.dart';
@@ -111,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
                         mainAxisSize: MainAxisSize.max,
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          context.read<PaymentPlansBloc>().add(CalculateSplit(state.bills));
+                          context.read<PaymentPlansCubit>().calculateSplit(state.bills);
                           context.pushNamed('payment-plans');
                         },
                       ),
@@ -244,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
 
   void _splitBill(Bill bill) {
     HapticFeedback.selectionClick();
-    context.read<PaymentPlansBloc>().add(CalculateSplit([bill]));
+    context.read<PaymentPlansCubit>().calculateSplit([bill]);
     context.pushNamed('payment-plans');
   }
 }

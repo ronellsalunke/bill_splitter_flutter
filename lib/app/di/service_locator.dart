@@ -1,5 +1,5 @@
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
-import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
 import 'package:bs_flutter/app/data/base_api_services.dart';
@@ -61,7 +61,7 @@ Future<void> setupServiceLocator() async {
   getIt.registerSingleton<ShareIntentService>(shareIntentService);
 
   getIt.registerFactory<BillBloc>(() => BillBloc(getIt<Box<Bill>>()));
-  getIt.registerFactory<PaymentPlansBloc>(() => PaymentPlansBloc(getIt<AppRepository>()));
+  getIt.registerFactory<PaymentPlansCubit>(() => PaymentPlansCubit(getIt<AppRepository>()));
   getIt.registerFactory<ThemeCubit>(() => ThemeCubit(getIt<SharedPreferences>()));
   getIt.registerFactory<UpdateCubit>(
     () => UpdateCubit(getIt<AppRepository>(), getIt<SharedPreferences>(), isDebugMode: kDebugMode),

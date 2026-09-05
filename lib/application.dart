@@ -1,6 +1,6 @@
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
-import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
 import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
@@ -101,7 +101,7 @@ class _BillSplitterApplicationState extends State<BillSplitterApplication> with 
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (context) => getIt<BillBloc>()..add(LoadBills())),
-        BlocProvider(create: (context) => getIt<PaymentPlansBloc>()),
+        BlocProvider(create: (context) => getIt<PaymentPlansCubit>()),
         BlocProvider(create: (context) => getIt<UpdateCubit>()),
         BlocProvider(create: (context) => getIt<ThemeCubit>()),
       ],

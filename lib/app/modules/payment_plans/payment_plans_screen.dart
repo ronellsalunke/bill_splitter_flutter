@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_bloc.dart';
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_cubit.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_state.dart';
 import 'package:bs_flutter/app/models/split/split_model.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
@@ -30,7 +30,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
     final colorScheme = context.colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('payment plans'), centerTitle: false),
-      body: BlocBuilder<PaymentPlansBloc, PaymentPlansState>(
+      body: BlocBuilder<PaymentPlansCubit, PaymentPlansState>(
         builder: (context, state) {
           if (state is PaymentPlansLoading) {
             return Center(child: CircularProgressIndicator(color: colorScheme.primary));
@@ -58,7 +58,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
           }
         },
       ),
-      bottomNavigationBar: BlocBuilder<PaymentPlansBloc, PaymentPlansState>(
+      bottomNavigationBar: BlocBuilder<PaymentPlansCubit, PaymentPlansState>(
         builder: (context, state) {
           return Container(
             decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
