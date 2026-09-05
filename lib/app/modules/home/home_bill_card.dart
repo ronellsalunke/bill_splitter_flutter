@@ -130,7 +130,7 @@ class _HomeBillCardState extends State<HomeBillCard> with SingleTickerProviderSt
       child: Clickable(
         onClick: widget.onOpen,
         child: Container(
-          decoration: BoxDecoration(color: colorScheme.surface),
+          decoration: BoxDecoration(color: colorScheme.surfaceContainer),
           padding: const EdgeInsets.all(12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,

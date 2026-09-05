@@ -99,7 +99,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
             ),
             bottomNavigationBar: hasBills
                 ? Container(
-                    decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(10)),
+                    decoration: BoxDecoration(color: colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(10)),
                     padding: const EdgeInsets.all(16),
                     child: SafeArea(
                       child: CommonButton(

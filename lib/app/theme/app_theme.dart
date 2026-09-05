@@ -1,4 +1,3 @@
-import 'package:bs_flutter/app/res/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class AppThemeColors extends ThemeExtension<AppThemeColors> {
@@ -81,8 +80,11 @@ class AppTheme {
   static ColorScheme monochromeColorScheme(Brightness brightness) {
     final isLight = brightness == Brightness.light;
 
-    return ColorScheme(
+    return ColorScheme.fromSeed(
+      seedColor: Colors.black,
       brightness: brightness,
+      dynamicSchemeVariant: DynamicSchemeVariant.monochrome,
+    ).copyWith(
       primary: isLight ? Colors.black : Colors.white,
       onPrimary: isLight ? Colors.white : Colors.black,
       primaryContainer: isLight ? _lightSurfaceDim : _darkSurfaceDim,
@@ -104,8 +106,6 @@ class AppTheme {
       onSurfaceVariant: isLight ? _lightOnSurfaceVariant : _darkOnSurfaceVariant,
       outline: isLight ? const Color(0xFF8A8A8A) : const Color(0xFF707070),
       outlineVariant: isLight ? const Color(0xFFD6D6D6) : const Color(0xFF303030),
-      shadow: Colors.black,
-      scrim: Colors.black,
       inverseSurface: isLight ? _darkSurface : _lightSurface,
       onInverseSurface: isLight ? Colors.white : Colors.black,
       inversePrimary: isLight ? Colors.white : Colors.black,
@@ -133,19 +133,12 @@ class AppTheme {
   }) {
     final colorScheme = dynamicColors && dynamicColorScheme != null ? dynamicColorScheme : monochromeColorScheme(brightness);
     final semanticTheme = semanticColors(brightness);
-    final isLight = brightness == Brightness.light;
 
     return ThemeData(
       colorScheme: colorScheme,
       useMaterial3: true,
       fontFamily: 'geist',
-      scaffoldBackgroundColor: isLight ? AppColors.backgroundColorLight : AppColors.backgroundColorDark,
-      appBarTheme: AppBarTheme(
-        backgroundColor: isLight ? AppColors.backgroundColorLight : AppColors.backgroundColorDark,
-        elevation: 0,
-        centerTitle: true,
-        scrolledUnderElevation: 0,
-      ),
+      appBarTheme: const AppBarTheme(elevation: 0, centerTitle: true, scrolledUnderElevation: 0),
       extensions: [semanticTheme],
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: semanticTheme.actionBackground,
