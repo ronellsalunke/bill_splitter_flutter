@@ -664,6 +664,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
                 removedItem.dispose();
               });
             },
+            borderRadius: BorderRadius.circular(8),
             backgroundColor: colorScheme.error,
             foregroundColor: colorScheme.onError,
             icon: Icons.delete_outline,
@@ -671,7 +672,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
         ],
       ),
       child: Container(
-        decoration: BoxDecoration(color: colorScheme.surface, borderRadius: BorderRadius.circular(8)),
+        decoration: BoxDecoration(color: colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
