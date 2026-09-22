@@ -3,13 +3,14 @@ import 'dart:math' as math;
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_cubit.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_state.dart';
 import 'package:bs_flutter/app/models/split/split_model.dart';
+import 'package:bs_flutter/app/widgets/clickable.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/extensions.dart';
 import 'package:bs_flutter/utils/payment_plan_exporter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:material_segmented_list/material_segmented_list.dart';
 import 'package:share_plus/share_plus.dart';
 
 class PaymentPlansScreen extends StatefulWidget {
@@ -44,14 +45,7 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
 
             return ListView(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              children: [
-                const _SettledHero(),
-                SegmentedListSection(
-                  children: instructions
-                      .map((instruction) => _PaymentInstructionTile(instruction: instruction, amountColor: colorScheme.primary))
-                      .toList(),
-                ),
-              ],
+              children: [const _SettledHero(), ...instructions.map(_paymentTile)],
             );
           } else {
             return const SizedBox();
@@ -84,8 +78,8 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
     );
   }
 
-  List<_PaymentInstruction> _paymentInstructions(SplitModel splitModel) {
-    final instructions = <_PaymentInstruction>[];
+  List<({String from, String to, double amount})> _paymentInstructions(SplitModel splitModel) {
+    final instructions = <({String from, String to, double amount})>[];
 
     for (final plan in splitModel.paymentPlans ?? <PaymentPlans?>[]) {
       final payer = plan?.name?.trim();
@@ -101,11 +95,68 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
           continue;
         }
 
-        instructions.add(_PaymentInstruction(from: payer, to: payee, amount: amount));
+        instructions.add((from: payer, to: payee, amount: amount));
       }
     }
 
     return instructions;
+  }
+
+  Widget _paymentTile(({String from, String to, double amount}) instruction) {
+    return Clickable(
+      onClick: () => _copyInstruction(instruction),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${instruction.from.toCapitalized} → ${instruction.to.toCapitalized}',
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 16),
+            _paymentAmount(instruction.amount),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _paymentAmount(double amount) {
+    final colorScheme = context.colorScheme;
+    final parts = amount.toStringAsFixed(2).split('.');
+    const fontFeatures = [FontFeature.tabularFigures(), FontFeature.slashedZero()];
+
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(
+            text: '₹ ${parts.first}',
+            style: TextStyle(color: colorScheme.onSurface),
+          ),
+          TextSpan(
+            text: '.${parts.last}',
+            style: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.62)),
+          ),
+        ],
+      ),
+      semanticsLabel: '₹ ${amount.toStringAsFixed(2)}',
+      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800, fontFeatures: fontFeatures),
+    );
+  }
+
+  Future<void> _copyInstruction(({String from, String to, double amount}) instruction) async {
+    final amount = instruction.amount;
+    final amountString = amount == amount.truncateToDouble() ? amount.toInt().toString() : amount.toStringAsFixed(2);
+    final text = '${instruction.from.toCapitalized} → ${instruction.to.toCapitalized} ₹$amountString';
+    await Clipboard.setData(ClipboardData(text: text));
+    if (mounted) {
+      final messenger = ScaffoldMessenger.of(context);
+      messenger.clearSnackBars();
+      messenger.showSnackBar(const SnackBar(content: Text('copied to clipboard')));
+    }
   }
 }
 
@@ -244,32 +295,4 @@ class _SettlementSuccessPainter extends CustomPainter {
         oldDelegate.circleColor != circleColor ||
         oldDelegate.checkColor != checkColor;
   }
-}
-
-class _PaymentInstructionTile extends SegmentedListTile {
-  _PaymentInstructionTile({required _PaymentInstruction instruction, required Color amountColor})
-    : super(
-        title: Text(
-          '${instruction.from.toCapitalized} → ${instruction.to.toCapitalized}',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: Text(
-          '₹ ${instruction.amount.toStringAsFixed(2)}',
-          style: TextStyle(
-            color: amountColor,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            fontFeatures: const [FontFeature.tabularFigures(), FontFeature.slashedZero()],
-          ),
-        ),
-      );
-}
-
-class _PaymentInstruction {
-  final String from;
-  final String to;
-  final double amount;
-
-  const _PaymentInstruction({required this.from, required this.to, required this.amount});
 }
