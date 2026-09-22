@@ -56,8 +56,19 @@ dev_dependencies:
   #  bloc_test: ^10.0.0
   mocktail: ^1.0.5
   bloc_lint: ^0.4.1
+  flutter_launcher_icons: ^0.14.4
   #  integration_test:
   #    sdk: flutter
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/icons/app_icon.png
+  adaptive_icon_foreground_inset: 30
+  min_sdk_android: 24
+  adaptive_icon_background: '#FFFFFF'
+  adaptive_icon_foreground: assets/icons/app_icon.png
+  adaptive_icon_monochrome: assets/icons/app_icon.png
 
 flutter:
   uses-material-design: true
