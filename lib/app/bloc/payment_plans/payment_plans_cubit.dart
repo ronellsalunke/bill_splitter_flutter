@@ -1,10 +1,10 @@
 import 'dart:async';
 
+import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_state.dart';
+import 'package:bs_flutter/app/data/result.dart';
 import 'package:bs_flutter/app/models/bill.dart';
+import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import '../../repository/repository.dart';
-import 'payment_plans_state.dart';
 
 class PaymentPlansCubit extends Cubit<PaymentPlansState> {
   PaymentPlansCubit(this._repository) : super(PaymentPlansInitial());
@@ -17,15 +17,16 @@ class PaymentPlansCubit extends Cubit<PaymentPlansState> {
 
   Future<void> _calculateSplit(List<Bill> bills) async {
     emit(PaymentPlansLoading());
-    try {
-      final splitModel = await _repository.calculateSplit(bills);
-      if (splitModel.paymentPlans == null || splitModel.paymentPlans!.isEmpty) {
-        emit(PaymentPlansError('No payment plans available'));
-      } else {
-        emit(PaymentPlansLoaded(splitModel));
-      }
-    } catch (_) {
-      emit(PaymentPlansError('API error: Unable to calculate split'));
+    final result = await _repository.calculateSplit(bills);
+    switch (result) {
+      case Success(value: final splitModel):
+        if (splitModel.paymentPlans == null || splitModel.paymentPlans!.isEmpty) {
+          emit(PaymentPlansError('No payment plans available'));
+        } else {
+          emit(PaymentPlansLoaded(splitModel));
+        }
+      case FailureResult(failure: final failure):
+        emit(PaymentPlansError(failure.userMessage));
     }
   }
 }

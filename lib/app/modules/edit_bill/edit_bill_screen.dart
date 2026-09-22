@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_event.dart';
 import 'package:bs_flutter/app/bloc/bill_bloc/bill_state.dart';
+import 'package:bs_flutter/app/data/result.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
@@ -193,14 +194,20 @@ class _EditBillScreenState extends State<EditBillScreen> {
     );
     try {
       final repository = getIt<AppRepository>();
-      final ocrModel = await repository.processReceipt(image);
-      _populateFromOcr(ocrModel);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt processed successfully')));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to process receipt: ${e.toString()}')));
+      final result = await repository.processReceipt(image);
+      if (!mounted) return;
+      switch (result) {
+        case Success(value: final ocrModel):
+          _populateFromOcr(ocrModel);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Receipt processed successfully')));
+          }
+        case FailureResult(failure: final failure):
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('Failed to process receipt: ${failure.userMessage}')));
+          }
       }
     } finally {
       if (isShared) getIt<ShareIntentService>().sharedImagePath = null;

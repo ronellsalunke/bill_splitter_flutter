@@ -2,8 +2,8 @@ import 'package:bs_flutter/app/bloc/bill_bloc/bill_bloc.dart';
 import 'package:bs_flutter/app/bloc/payment_plans/payment_plans_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
-import 'package:bs_flutter/app/data/base_api_services.dart';
-import 'package:bs_flutter/app/data/network_api_service.dart';
+import 'package:bs_flutter/app/data/api_client.dart';
+import 'package:bs_flutter/app/data/dio_api_client.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:bs_flutter/utils/share_intent_service.dart';
@@ -52,9 +52,9 @@ Future<void> setupServiceLocator() async {
     return dio;
   });
 
-  getIt.registerLazySingleton<BaseApiServices>(() => NetworkApiService(getIt<Dio>()));
+  getIt.registerLazySingleton<ApiClient>(() => DioApiClient(getIt<Dio>()));
 
-  getIt.registerLazySingleton<AppRepository>(() => AppRepository(apiServices: getIt<BaseApiServices>()));
+  getIt.registerLazySingleton<AppRepository>(() => AppRepository(apiClient: getIt<ApiClient>()));
 
   final shareIntentService = ShareIntentService();
   shareIntentService.initialize();
@@ -63,5 +63,5 @@ Future<void> setupServiceLocator() async {
   getIt.registerFactory<BillBloc>(() => BillBloc(getIt<Box<Bill>>()));
   getIt.registerFactory<PaymentPlansCubit>(() => PaymentPlansCubit(getIt<AppRepository>()));
   getIt.registerFactory<ThemeCubit>(() => ThemeCubit(getIt<SharedPreferences>()));
-  getIt.registerFactory<UpdateCubit>(() => UpdateCubit(getIt<AppRepository>(), getIt<SharedPreferences>()),);
+  getIt.registerFactory<UpdateCubit>(() => UpdateCubit(getIt<AppRepository>(), getIt<SharedPreferences>()));
 }

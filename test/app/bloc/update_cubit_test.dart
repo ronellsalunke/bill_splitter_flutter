@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:bs_flutter/app/bloc/update/update_cubit.dart';
 import 'package:bs_flutter/app/bloc/update/update_state.dart';
+import 'package:bs_flutter/app/data/api_failure.dart';
+import 'package:bs_flutter/app/data/result.dart';
 import 'package:bs_flutter/app/models/update/update_manifest.dart';
 import 'package:bs_flutter/app/repository/repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -35,7 +37,9 @@ void main() {
   });
 
   test('emits update available when version and build are newer', () async {
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.8', buildNumber: 8));
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.8', buildNumber: 8)));
     final cubit = UpdateCubit(
       repository,
       prefs,
@@ -50,7 +54,26 @@ void main() {
   });
 
   test('emits no update when version and build are the same', () async {
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.7', buildNumber: 7));
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.7', buildNumber: 7)));
+    final cubit = UpdateCubit(
+      repository,
+      prefs,
+      packageInfoFactory: () async => _packageInfo(version: '1.0.7', buildNumber: '7'),
+    );
+    final expectation = expectLater(cubit.stream, emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>()]));
+
+    await cubit.checkForUpdate();
+
+    await expectation;
+    await cubit.close();
+  });
+
+  test('emits no update when manifest fetch fails', () async {
+    when(() => repository.fetchUpdateManifest()).thenAnswer(
+      (_) async => const FailureResult<UpdateManifest, ApiFailure>(ApiFailure(ApiFailureKind.network, 'Network error')),
+    );
     final cubit = UpdateCubit(
       repository,
       prefs,
@@ -65,7 +88,9 @@ void main() {
   });
 
   test('emits update available when only version is newer', () async {
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.8', buildNumber: 7));
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.8', buildNumber: 7)));
     final cubit = UpdateCubit(
       repository,
       prefs,
@@ -80,7 +105,9 @@ void main() {
   });
 
   test('emits update available when only build is newer', () async {
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.7', buildNumber: 8));
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.7', buildNumber: 8)));
     final cubit = UpdateCubit(
       repository,
       prefs,
@@ -95,7 +122,9 @@ void main() {
   });
 
   test('emits no update for an invalid manifest version', () async {
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: 'invalid', buildNumber: 8));
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: 'invalid', buildNumber: 8)));
     final cubit = UpdateCubit(
       repository,
       prefs,
@@ -110,7 +139,9 @@ void main() {
   });
 
   test('dismiss suppresses checks for the current cubit session', () async {
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.8', buildNumber: 8));
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.8', buildNumber: 8)));
     final cubit = UpdateCubit(
       repository,
       prefs,
@@ -128,12 +159,10 @@ void main() {
 
   test('coalesces duplicate checks into the in-flight operation', () async {
     final packageInfoCompleter = Completer<PackageInfo>();
-    when(() => repository.fetchUpdateManifest()).thenAnswer((_) async => _manifest(version: '1.0.8', buildNumber: 8));
-    final cubit = UpdateCubit(
-      repository,
-      prefs,
-      packageInfoFactory: () => packageInfoCompleter.future,
-    );
+    when(
+      () => repository.fetchUpdateManifest(),
+    ).thenAnswer((_) async => Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.8', buildNumber: 8)));
+    final cubit = UpdateCubit(repository, prefs, packageInfoFactory: () => packageInfoCompleter.future);
     final emittedStates = <UpdateState>[];
     final subscription = cubit.stream.listen(emittedStates.add);
 
@@ -151,11 +180,7 @@ void main() {
 
   test('dismiss remains authoritative while a check is running', () async {
     final packageInfoCompleter = Completer<PackageInfo>();
-    final cubit = UpdateCubit(
-      repository,
-      prefs,
-      packageInfoFactory: () => packageInfoCompleter.future,
-    );
+    final cubit = UpdateCubit(repository, prefs, packageInfoFactory: () => packageInfoCompleter.future);
     final emittedStates = <UpdateState>[];
     final subscription = cubit.stream.listen(emittedStates.add);
 
@@ -175,7 +200,7 @@ void main() {
   test('persists changelog acknowledgement before rechecking', () async {
     when(() => repository.fetchUpdateManifest()).thenAnswer((_) async {
       expect(prefs.getInt('last_shown_changelog_build_number'), 7);
-      return _manifest(version: '1.0.7', buildNumber: 7);
+      return Success<UpdateManifest, ApiFailure>(_manifest(version: '1.0.7', buildNumber: 7));
     });
     final cubit = UpdateCubit(
       repository,
@@ -197,18 +222,26 @@ void main() {
     when(() => repository.fetchUpdateManifest()).thenAnswer((_) async {
       fetchCount++;
       if (fetchCount == 1) {
-        return UpdateManifest(
+        return Success<UpdateManifest, ApiFailure>(
+          UpdateManifest(
+            latestVersion: '1.0.8',
+            latestBuildNumber: 8,
+            message: 'Update available',
+            releases: [
+              UpdateRelease(version: '1.0.7', buildNumber: 7, changes: const ['old news']),
+            ],
+          ),
+        );
+      }
+      return Success<UpdateManifest, ApiFailure>(
+        UpdateManifest(
           latestVersion: '1.0.8',
           latestBuildNumber: 8,
           message: 'Update available',
-          releases: [UpdateRelease(version: '1.0.7', buildNumber: 7, changes: const ['old news'])],
-        );
-      }
-      return UpdateManifest(
-        latestVersion: '1.0.8',
-        latestBuildNumber: 8,
-        message: 'Update available',
-        releases: [UpdateRelease(version: '1.0.8', buildNumber: 8, changes: const ['new stuff'])],
+          releases: [
+            UpdateRelease(version: '1.0.8', buildNumber: 8, changes: const ['new stuff']),
+          ],
+        ),
       );
     });
     final cubit = UpdateCubit(
@@ -218,12 +251,7 @@ void main() {
     );
     final expectation = expectLater(
       cubit.stream,
-      emitsInOrder([
-        isA<UpdateChecking>(),
-        isA<UpdateNotAvailable>(),
-        isA<UpdateChecking>(),
-        isA<UpdateChangelogAvailable>(),
-      ]),
+      emitsInOrder([isA<UpdateChecking>(), isA<UpdateNotAvailable>(), isA<UpdateChecking>(), isA<UpdateChangelogAvailable>()]),
     );
 
     await cubit.checkForUpdate();

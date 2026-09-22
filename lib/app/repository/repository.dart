@@ -1,43 +1,29 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:bs_flutter/app/data/base_api_services.dart';
+import 'package:bs_flutter/app/data/api_client.dart';
+import 'package:bs_flutter/app/data/api_failure.dart';
 import 'package:bs_flutter/app/data/endpoints.dart';
+import 'package:bs_flutter/app/data/result.dart';
 import 'package:bs_flutter/app/models/bill.dart';
 import 'package:bs_flutter/app/models/ocr/ocr_model.dart';
 import 'package:bs_flutter/app/models/split/split_model.dart';
 import 'package:bs_flutter/app/models/split_request/split_request_model.dart';
 import 'package:bs_flutter/app/models/update/update_manifest.dart';
-import 'package:dio/dio.dart';
 
 class AppRepository {
-  final BaseApiServices _apiServices;
-  final Future<MultipartFile> Function(String path, String filename)? _multipartFileFactory;
+  AppRepository({required ApiClient apiClient}) : _apiClient = apiClient;
 
-  AppRepository({
-    required BaseApiServices apiServices,
-    Future<MultipartFile> Function(String path, String filename)? multipartFileFactory,
-  }) : _apiServices = apiServices,
-       _multipartFileFactory = multipartFileFactory;
+  final ApiClient _apiClient;
 
-  Future<OcrModel> processReceipt(File image) async {
-    try {
-      final url = Endpoints.ocr;
-      final multipartFile = _multipartFileFactory != null
-          ? await _multipartFileFactory(image.path, 'receipt.jpg')
-          : await MultipartFile.fromFile(image.path, filename: 'receipt.jpg');
-
-      final formData = FormData.fromMap({'file': multipartFile});
-      dynamic response = await _apiServices.getPostApiResponse(url, formData);
-      return OcrModel.fromJson(response);
-    } catch (e) {
-      rethrow;
-    }
+  Future<Result<OcrModel, ApiFailure>> processReceipt(File image) {
+    return _guard(() async {
+      final response = await _apiClient.uploadFile(Endpoints.ocr, field: 'file', file: image, filename: 'receipt.jpg');
+      return _parse(() => OcrModel.fromJson(response as Map<String, dynamic>));
+    });
   }
 
-  Future<SplitModel> calculateSplit(List<Bill> bills) async {
-    try {
-      final url = Endpoints.split;
+  Future<Result<SplitModel, ApiFailure>> calculateSplit(List<Bill> bills) {
+    return _guard(() async {
       final splitRequest = SplitRequest(
         bills: bills
             .map(
@@ -57,22 +43,35 @@ class AppRepository {
             .toList(),
       );
       final data = splitRequest.toJson();
-      dynamic response = await _apiServices.getPostApiResponse(url, data);
-      return SplitModel.fromJson(response);
-    } catch (e) {
-      rethrow;
+      final response = await _apiClient.postJson(Endpoints.split, data);
+      return _parse(() => SplitModel.fromJson(response as Map<String, dynamic>));
+    });
+  }
+
+  Future<Result<UpdateManifest, ApiFailure>> fetchUpdateManifest() {
+    return _guard(() async {
+      final response = await _apiClient.getJson(Endpoints.updateManifest);
+      return _parse(() => UpdateManifest.fromJson(response as Map<String, dynamic>));
+    });
+  }
+
+  Future<Result<T, ApiFailure>> _guard<T>(Future<T> Function() action) async {
+    try {
+      return Success(await action());
+    } on ApiFailure catch (error) {
+      return FailureResult(error);
+    } catch (error) {
+      return FailureResult(ApiFailure(ApiFailureKind.unknown, error.toString()));
     }
   }
 
-  Future<UpdateManifest> fetchUpdateManifest() async {
+  T _parse<T>(T Function() parser) {
     try {
-      dynamic response = await _apiServices.getGetApiResponse(Endpoints.updateManifest);
-      if (response is String) {
-        response = jsonDecode(response);
-      }
-      return UpdateManifest.fromJson(response);
-    } catch (e) {
+      return parser();
+    } on ApiFailure {
       rethrow;
+    } catch (error) {
+      throw ApiFailure(ApiFailureKind.parsing, error.toString());
     }
   }
 }
