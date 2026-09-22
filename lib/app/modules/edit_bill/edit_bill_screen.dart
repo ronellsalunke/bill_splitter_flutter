@@ -13,6 +13,7 @@ import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_dropdown.dart';
 import 'package:bs_flutter/app/widgets/common_multi_dropdown.dart';
 import 'package:bs_flutter/app/widgets/common_textfield.dart';
+import 'package:bs_flutter/app/widgets/discard_changes_dialog.dart';
 import 'package:bs_flutter/app/widgets/quantity_stepper.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
@@ -56,6 +57,8 @@ class _EditBillScreenState extends State<EditBillScreen> {
   final _taxFocusNode = FocusNode();
   final _serviceFocusNode = FocusNode();
   DateTime? _existingCreatedAt;
+  bool _saved = false;
+  Bill? _originalBill;
 
   @override
   void initState() {
@@ -67,6 +70,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
         final bills = state.bills.where((b) => b.id == widget.billId);
         if (bills.isNotEmpty) {
           _populateFormFromBill(bills.first);
+          _originalBill = bills.first;
         } else {
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill not found')));
           context.pop();
@@ -277,6 +281,9 @@ class _EditBillScreenState extends State<EditBillScreen> {
         if (widget.billId != 'new' && state is BillLoaded) {
           final bills = state.bills.where((b) => b.id == widget.billId);
           if (bills.isNotEmpty) {
+            if (!_hasChanges) {
+              _originalBill = bills.first;
+            }
             _populateFormFromBill(bills.first);
           } else {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Bill not found')));
@@ -285,8 +292,21 @@ class _EditBillScreenState extends State<EditBillScreen> {
         }
       },
       builder: (context, state) {
-        return Scaffold(
-          appBar: AppBar(title: Text(widget.billId == 'new' ? 'new bill' : 'edit bill'), centerTitle: false),
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) async {
+            if (didPop) return;
+            if (_saved || !_hasChanges) {
+              if (context.mounted) context.pop();
+              return;
+            }
+            final discard = await DiscardChangesDialog.show(context);
+            if (discard == true && context.mounted) {
+              context.pop();
+            }
+          },
+          child: Scaffold(
+            appBar: AppBar(title: Text(widget.billId == 'new' ? 'new bill' : 'edit bill'), centerTitle: false),
           body: SingleChildScrollView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: Column(
@@ -436,6 +456,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
               ),
             ),
           ),
+          ),
         );
       },
     );
@@ -582,6 +603,61 @@ class _EditBillScreenState extends State<EditBillScreen> {
     );
   }
 
+  bool get _hasChanges {
+    if (_saved) return false;
+
+    final original = _originalBill;
+    if (original == null) {
+      if (_formData.items.isEmpty) return true;
+      return _occasionController.text.trim().isNotEmpty ||
+          _amountController.text.trim().isNotEmpty ||
+          _taxController.text.trim() != '5.0' ||
+          _serviceController.text.trim().isNotEmpty ||
+          _formData.paidBy.isNotEmpty ||
+          _participants.isNotEmpty ||
+          _formData.items.length > 1 ||
+          _isItemTouched(_formData.items.first);
+    }
+
+    if (_occasionController.text.trim() != original.occasion ||
+        _formData.paidBy != original.paidBy ||
+        _parsedOrNaN(_amountController.text) != original.amount ||
+        (_parseOrDefault(_taxController.text, 5.0)) != original.tax ||
+        (_parseOrDefault(_serviceController.text, 0.0)) != original.service ||
+        _formData.items.length != original.items.length) {
+      return true;
+    }
+
+    for (var index = 0; index < _formData.items.length; index++) {
+      final formItem = _formData.items[index];
+      final billItem = original.items[index];
+      if (formItem.name.trim() != billItem.name.trim() ||
+          formItem.price != billItem.price ||
+          formItem.quantity != billItem.quantity ||
+          !_sameParticipants(formItem.consumedBy, billItem.consumedBy)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  bool _isItemTouched(_ItemFormData item) {
+    return item.name.trim().isNotEmpty || item.price != 0.0 || item.quantity != 1 || item.consumedBy.isNotEmpty;
+  }
+
+  double _parsedOrNaN(String text) => double.tryParse(text.trim()) ?? double.nan;
+
+  double _parseOrDefault(String text, double fallback) => double.tryParse(text.trim()) ?? fallback;
+
+  bool _sameParticipants(List<String> a, List<String> b) {
+    if (a.length != b.length) return false;
+    for (var index = 0; index < a.length; index++) {
+      if (a[index] != b[index]) return false;
+    }
+    return true;
+  }
+
   Future<void> _saveBill() async {
     FocusManager.instance.primaryFocus?.unfocus();
     final occasion = _occasionController.text.trim();
@@ -636,6 +712,7 @@ class _EditBillScreenState extends State<EditBillScreen> {
       billBloc.add(UpdateBill(bill));
     }
     if (!mounted) return;
+    _saved = true;
     router.pop();
   }
 
