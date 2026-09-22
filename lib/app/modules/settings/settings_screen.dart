@@ -2,6 +2,7 @@ import 'package:bs_flutter/app/bloc/theme/theme_cubit.dart';
 import 'package:bs_flutter/app/bloc/theme/theme_state.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
+import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -19,11 +20,22 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   String _appVersion = '';
+  bool _supportsDynamicColor = false;
 
   @override
   void initState() {
     super.initState();
     _initPackageInfo();
+    _checkDynamicColorSupport();
+  }
+
+  Future<void> _checkDynamicColorSupport() async {
+    final palette = await DynamicColorPlugin.getCorePalette();
+    if (mounted) {
+      setState(() {
+        _supportsDynamicColor = palette != null;
+      });
+    }
   }
 
   Future<void> _initPackageInfo() async {
@@ -66,27 +78,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         context.read<ThemeCubit>().cycleThemeMode();
                       },
                     ),
-                    SegmentedListTile(
-                      leading: Icon(Icons.palette_rounded, color: context.colorScheme.primary),
-                      title: const Text('dynamic color', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
-                      trailing: Switch(
-                        value: state.dynamicColorEnabled,
-                        onChanged: (value) {
+                    if (_supportsDynamicColor)
+                      SegmentedListTile(
+                        leading: Icon(Icons.palette_rounded, color: context.colorScheme.primary),
+                        title: const Text('dynamic color', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
+                        trailing: Switch(
+                          value: state.dynamicColorEnabled,
+                          onChanged: (value) {
+                            HapticFeedback.selectionClick();
+                            context.read<ThemeCubit>().setDynamicColorEnabled(value);
+                          },
+                          thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                            if (states.contains(WidgetState.selected)) {
+                              return const Icon(Icons.check, size: 16);
+                            }
+                            return const Icon(Icons.close, size: 16);
+                          }),
+                        ),
+                        onTap: () {
                           HapticFeedback.selectionClick();
-                          context.read<ThemeCubit>().setDynamicColorEnabled(value);
+                          context.read<ThemeCubit>().setDynamicColorEnabled(!state.dynamicColorEnabled);
                         },
-                        thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-                          if (states.contains(WidgetState.selected)) {
-                            return const Icon(Icons.check, size: 16);
-                          }
-                          return const Icon(Icons.close, size: 16);
-                        }),
                       ),
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        context.read<ThemeCubit>().setDynamicColorEnabled(!state.dynamicColorEnabled);
-                      },
-                    ),
                   ],
                 ),
                 verticalSpace(24),
