@@ -4,6 +4,17 @@
   "message": "update available",
   "releases": [
     {
+      "version": "1.0.14",
+      "buildNumber": 14,
+      "changes": [
+        "Updated app icon handling",
+        "Edit Bill now asks for a confirmation before discarding unsaved changes",
+        "Payment plans list is cleaner, tap any payment to copy it",
+        "Dynamic color toggle only appears on Android 12 and above",
+        "Clearer error messages when split calculation fails"
+      ]
+    },
+    {
       "version": "1.0.13",
       "buildNumber": 13,
       "changes": [
