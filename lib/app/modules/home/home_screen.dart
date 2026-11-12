@@ -54,18 +54,25 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
     final colorScheme = context.colorScheme;
     return BlocListener<UpdateCubit, UpdateState>(
       listener: (context, updateState) {
-        if (updateState is UpdateAvailable) {
-          _showUpdateBanner(context, updateState);
-        } else if (updateState is UpdateChangelogAvailable) {
-          ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-          _showUpdateChangelog(updateState);
-        } else if (updateState is UpdateNotAvailable || updateState is UpdateBannerDismissed) {
-          ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+        switch (updateState) {
+          case UpdateAvailable():
+            _showUpdateBanner(context, updateState);
+          case UpdateChangelogAvailable():
+            ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            _showUpdateChangelog(updateState);
+          case UpdateNotAvailable() || UpdateBannerDismissed():
+            ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+          case UpdateInitial() || UpdateChecking():
+            break;
         }
       },
       child: BlocBuilder<BillBloc, BillState>(
         builder: (context, state) {
-          final bool hasBills = state is BillLoaded && state.bills.isNotEmpty;
+          final bills = switch (state) {
+            BillLoaded(bills: final bills) => bills,
+            BillInitial() || BillLoading() || BillError() => const <Bill>[],
+          };
+          final bool hasBills = bills.isNotEmpty;
           return Scaffold(
             appBar: AppBar(
               leading: SvgPicture.asset(
@@ -110,7 +117,7 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
                         mainAxisSize: MainAxisSize.max,
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          context.read<PaymentPlansCubit>().calculateSplit(state.bills);
+                          context.read<PaymentPlansCubit>().calculateSplit(bills);
                           context.pushNamed('payment-plans');
                         },
                       ),
@@ -119,63 +126,57 @@ class _HomeScreenState extends State<HomeScreen> with ScrollRevealFabMixin {
                 : null,
             body: BlocBuilder<BillBloc, BillState>(
               builder: (context, state) {
-                if (state is BillLoaded && state.bills.isEmpty) {
-                  return Center(child: _buildAddNewBillButton());
-                }
-                return SingleChildScrollView(
-                  controller: scrollRevealController,
-                  child: Column(
-                    children: [
-                      if (state is BillLoading)
-                        const CircularProgressIndicator()
-                      else if (state is BillError)
-                        Text('Error: ${state.message}')
-                      else if (state is BillLoaded)
-                        Builder(
-                          builder: (context) {
-                            final hintPrefs = getIt<SwipeHintPreferences>();
-                            final shouldPreviewFirstBill = state.bills.length == 1 && hintPrefs.isHomeBillActionsHintPending;
-                            return Column(
-                              children: [
-                                verticalSpace(12),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [const Text('bills'), Text('${state.bills.length}')],
-                                  ),
-                                ),
-                                verticalSpace(12),
-                                for (final entry in state.bills.asMap().entries) ...[
-                                  HomeBillCard(
-                                    key: ValueKey(entry.value.id),
-                                    bill: entry.value,
-                                    showPreview: shouldPreviewFirstBill && entry.key == 0,
-                                    onOpen: () {
-                                      context.pushNamed('bill', pathParameters: {'id': entry.value.id});
-                                    },
-                                    onDelete: () => _deleteBill(entry.value),
-                                    onSplit: () => _splitBill(entry.value),
-                                    onPreviewCompleted: () async {
-                                      await getIt<SwipeHintPreferences>().markHomeBillActionsHintShown();
-                                    },
-                                  ),
-                                  if (entry.key != state.bills.length - 1) const Divider(height: 1),
-                                ],
-                              ],
-                            );
-                          },
-                        )
-                      else
-                        const SizedBox(),
-                    ],
+                return switch (state) {
+                  BillLoaded(bills: []) => Center(child: _buildAddNewBillButton()),
+                  BillLoaded(bills: final bills) => SingleChildScrollView(
+                    controller: scrollRevealController,
+                    child: Column(children: [_buildBillList(context, bills)]),
                   ),
-                );
+                  BillError(message: final message) => SingleChildScrollView(
+                    controller: scrollRevealController,
+                    child: Column(children: [Text('Error: $message')]),
+                  ),
+                  BillInitial() || BillLoading() => SingleChildScrollView(
+                    controller: scrollRevealController,
+                    child: const Column(children: [CircularProgressIndicator()]),
+                  ),
+                };
               },
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildBillList(BuildContext context, List<Bill> bills) {
+    final hintPrefs = getIt<SwipeHintPreferences>();
+    final shouldPreviewFirstBill = bills.length == 1 && hintPrefs.isHomeBillActionsHintPending;
+    return Column(
+      children: [
+        verticalSpace(12),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text('bills'), Text('${bills.length}')]),
+        ),
+        verticalSpace(12),
+        for (final entry in bills.asMap().entries) ...[
+          HomeBillCard(
+            key: ValueKey(entry.value.id),
+            bill: entry.value,
+            showPreview: shouldPreviewFirstBill && entry.key == 0,
+            onOpen: () {
+              context.pushNamed('bill', pathParameters: {'id': entry.value.id});
+            },
+            onDelete: () => _deleteBill(entry.value),
+            onSplit: () => _splitBill(entry.value),
+            onPreviewCompleted: () async {
+              await getIt<SwipeHintPreferences>().markHomeBillActionsHintShown();
+            },
+          ),
+          if (entry.key != bills.length - 1) const Divider(height: 1),
+        ],
+      ],
     );
   }
 

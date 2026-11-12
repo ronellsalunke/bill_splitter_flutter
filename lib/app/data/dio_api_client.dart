@@ -79,8 +79,8 @@ class DioApiClient implements ApiClient {
         _badResponseMessage(error.response),
         error.response?.statusCode,
       ),
-      DioExceptionType.connectionError ||
-      DioExceptionType.badCertificate => ApiFailure(ApiFailureKind.network, error.message ?? 'Network request failed'),
+      DioExceptionType.connectionError => ApiFailure(ApiFailureKind.network, error.message ?? 'Network request failed'),
+      DioExceptionType.badCertificate => ApiFailure(ApiFailureKind.unknown, error.message ?? 'Certificate verification failed'),
       DioExceptionType.cancel => ApiFailure(ApiFailureKind.unknown, error.message ?? 'Request cancelled'),
       DioExceptionType.unknown => ApiFailure(ApiFailureKind.unknown, error.message ?? 'Unknown API error'),
       _ => ApiFailure(ApiFailureKind.unknown, error.message ?? 'Unknown API error'),

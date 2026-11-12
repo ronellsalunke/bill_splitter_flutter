@@ -1,19 +1,27 @@
 import 'package:bs_flutter/app/models/update/update_manifest.dart';
 import 'package:equatable/equatable.dart';
 
-abstract class UpdateState extends Equatable {
+sealed class UpdateState extends Equatable {
+  const UpdateState();
+
   @override
   List<Object?> get props => [];
 }
 
-class UpdateInitial extends UpdateState {}
+final class UpdateInitial extends UpdateState {
+  const UpdateInitial();
+}
 
-class UpdateChecking extends UpdateState {}
+final class UpdateChecking extends UpdateState {
+  const UpdateChecking();
+}
 
-class UpdateNotAvailable extends UpdateState {}
+final class UpdateNotAvailable extends UpdateState {
+  const UpdateNotAvailable();
+}
 
-class UpdateAvailable extends UpdateState {
-  UpdateAvailable(this.manifest);
+final class UpdateAvailable extends UpdateState {
+  const UpdateAvailable(this.manifest);
 
   final UpdateManifest manifest;
 
@@ -21,8 +29,8 @@ class UpdateAvailable extends UpdateState {
   List<Object?> get props => [manifest];
 }
 
-class UpdateChangelogAvailable extends UpdateState {
-  UpdateChangelogAvailable(this.release);
+final class UpdateChangelogAvailable extends UpdateState {
+  const UpdateChangelogAvailable(this.release);
 
   final UpdateRelease release;
 
@@ -30,4 +38,6 @@ class UpdateChangelogAvailable extends UpdateState {
   List<Object?> get props => [release];
 }
 
-class UpdateBannerDismissed extends UpdateState {}
+final class UpdateBannerDismissed extends UpdateState {
+  const UpdateBannerDismissed();
+}

@@ -7,6 +7,7 @@ import 'package:bs_flutter/app/widgets/clickable.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/extensions.dart';
+import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/payment_plan_exporter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -33,27 +34,26 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
       appBar: AppBar(title: const Text('payment plans'), centerTitle: false),
       body: BlocBuilder<PaymentPlansCubit, PaymentPlansState>(
         builder: (context, state) {
-          if (state is PaymentPlansLoading) {
-            return Center(child: CircularProgressIndicator(color: colorScheme.primary));
-          } else if (state is PaymentPlansError) {
-            return Center(child: Text(state.message));
-          } else if (state is PaymentPlansLoaded) {
-            final instructions = _paymentInstructions(state.splitModel);
-            if (instructions.isEmpty) {
-              return const Center(child: Text('No pending payments.'));
-            }
-
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              children: [const _SettledHero(), ...instructions.map(_paymentTile)],
-            );
-          } else {
-            return const SizedBox();
-          }
+          return switch (state) {
+            PaymentPlansLoading() => Center(child: CircularProgressIndicator(color: colorScheme.primary)),
+            PaymentPlansError(message: final message) => _buildError(message),
+            PaymentPlansOffline() => _buildOffline(),
+            PaymentPlansLoaded(splitModel: final splitModel) => _buildPaymentPlans(splitModel),
+            PaymentPlansInitial() => const SizedBox(),
+          };
         },
       ),
       bottomNavigationBar: BlocBuilder<PaymentPlansCubit, PaymentPlansState>(
         builder: (context, state) {
+          final sharePlans = switch (state) {
+            PaymentPlansLoaded(splitModel: final splitModel) when splitModel.paymentPlans?.isNotEmpty ?? false =>
+              () => _sharePaymentPlans(splitModel),
+            PaymentPlansLoaded() ||
+            PaymentPlansInitial() ||
+            PaymentPlansLoading() ||
+            PaymentPlansError() ||
+            PaymentPlansOffline() => null,
+          };
           return Container(
             decoration: BoxDecoration(color: colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(10)),
             padding: const EdgeInsets.all(16),
@@ -64,17 +64,68 @@ class _PaymentPlansScreenState extends State<PaymentPlansScreen> {
                 iconColor: colorScheme.onPrimary,
                 text: 'share',
                 mainAxisSize: MainAxisSize.max,
-                onTap:
-                    (state is PaymentPlansLoaded &&
-                        state.splitModel.paymentPlans != null &&
-                        state.splitModel.paymentPlans!.isNotEmpty)
-                    ? () => _sharePaymentPlans(state.splitModel)
-                    : null,
+                onTap: sharePlans,
               ),
             ),
           );
         },
       ),
+    );
+  }
+
+  Widget _buildError(String message) {
+    return _buildRetryable(icon: Icons.error_outline_rounded, title: 'could not calculate split', subtitle: message);
+  }
+
+  Widget _buildOffline() {
+    return _buildRetryable(
+      icon: Icons.wifi_off_rounded,
+      title: 'could not connect',
+      subtitle: 'check your connection and try again.',
+    );
+  }
+
+  Widget _buildRetryable({required IconData icon, required String title, required String subtitle}) {
+    final colorScheme = context.colorScheme;
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 40, color: colorScheme.outline),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: TextStyle(color: colorScheme.onSurface),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(color: colorScheme.outline),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          CommonButton(
+            borderRadius: 8,
+            icon: Icons.refresh_rounded,
+            iconColor: colorScheme.onPrimary,
+            text: 'retry',
+            onTap: context.read<PaymentPlansCubit>().retry,
+          ),
+        ],
+      ),
+    ).paddingSymmetric(horizontal: 24);
+  }
+
+  Widget _buildPaymentPlans(SplitModel splitModel) {
+    final instructions = _paymentInstructions(splitModel);
+    if (instructions.isEmpty) {
+      return const Center(child: Text('No pending payments.'));
+    }
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      children: [const _SettledHero(), ...instructions.map(_paymentTile)],
     );
   }
 

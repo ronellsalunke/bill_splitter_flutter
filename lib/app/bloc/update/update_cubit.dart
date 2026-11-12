@@ -13,7 +13,7 @@ class UpdateCubit extends Cubit<UpdateState> {
 
   UpdateCubit(this._repository, this._prefs, {Future<PackageInfo> Function()? packageInfoFactory})
     : _packageInfoFactory = packageInfoFactory ?? PackageInfo.fromPlatform,
-      super(UpdateInitial());
+      super(const UpdateInitial());
 
   final AppRepository _repository;
   final SharedPreferences _prefs;
@@ -24,7 +24,7 @@ class UpdateCubit extends Cubit<UpdateState> {
 
   Future<void> checkForUpdate() {
     if (_bannerDismissed) {
-      emit(UpdateBannerDismissed());
+      emit(const UpdateBannerDismissed());
       return Future<void>.value();
     }
 
@@ -43,7 +43,7 @@ class UpdateCubit extends Cubit<UpdateState> {
 
   void dismissBanner() {
     _bannerDismissed = true;
-    emit(UpdateBannerDismissed());
+    emit(const UpdateBannerDismissed());
   }
 
   Future<void> acknowledgeChangelogAndRecheck() async {
@@ -54,7 +54,7 @@ class UpdateCubit extends Cubit<UpdateState> {
   }
 
   Future<void> _performCheck() async {
-    emit(UpdateChecking());
+    emit(const UpdateChecking());
 
     try {
       final packageInfo = await _packageInfoFactory();
@@ -65,7 +65,7 @@ class UpdateCubit extends Cubit<UpdateState> {
 
       switch (result) {
         case FailureResult():
-          if (!_bannerDismissed) emit(UpdateNotAvailable());
+          if (!_bannerDismissed) emit(const UpdateNotAvailable());
           return;
         case Success(value: final manifest):
           final currentVersion = Version.parse(packageInfo.version);
@@ -95,12 +95,12 @@ class UpdateCubit extends Cubit<UpdateState> {
           } else if (latestVersion > currentVersion || manifest.latestBuildNumber > currentBuildNumber) {
             emit(UpdateAvailable(manifest));
           } else {
-            emit(UpdateNotAvailable());
+            emit(const UpdateNotAvailable());
           }
       }
     } catch (_) {
       if (!_bannerDismissed) {
-        emit(UpdateNotAvailable());
+        emit(const UpdateNotAvailable());
       }
     }
   }

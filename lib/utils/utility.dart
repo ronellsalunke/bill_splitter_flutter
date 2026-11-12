@@ -1,15 +1,9 @@
 import 'dart:io';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Utility {
-  static Future<bool> hasInternetConnection() async {
-    final result = await Connectivity().checkConnectivity();
-    return result.hasConnectivity;
-  }
-
   static Future<File?> pickImage(BuildContext context, ImageSource source) async {
     try {
       final ImagePicker picker = ImagePicker();

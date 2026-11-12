@@ -181,15 +181,6 @@ class _EditBillScreenState extends State<EditBillScreen> {
   Future<void> _processOcr(File image, {bool isShared = false}) async {
     final colorScheme = context.colorScheme;
 
-    final hasConnection = await Utility.hasInternetConnection();
-    if (!mounted) return;
-    if (!hasConnection) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('No internet connection. Please check your connection and try again.')));
-      return;
-    }
-
     setState(() => _isOcrProcessing = true);
     showDialog(
       context: context,
@@ -307,155 +298,155 @@ class _EditBillScreenState extends State<EditBillScreen> {
           },
           child: Scaffold(
             appBar: AppBar(title: Text(widget.billId == 'new' ? 'new bill' : 'edit bill'), centerTitle: false),
-          body: SingleChildScrollView(
-            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CommonButton(
-                  text: _isOcrProcessing ? 'processing...' : 'scan receipt',
-                  icon: _isOcrProcessing ? null : Icons.document_scanner_rounded,
-                  iconColor: colorScheme.onPrimary,
-                  borderRadius: 8,
-                  mainAxisSize: MainAxisSize.max,
-                  onTap: _isOcrProcessing ? null : _onOcrTap,
-                ).paddingAll(16),
-                _formSection(
-                  title: 'participants',
-                  showDivider: false,
-                  children: [
-                    CommonTextField(
-                      hintText: 'Add name...',
-                      controller: _participantsController,
-                      textCapitalization: TextCapitalization.words,
-                      currentFocus: _participantsFocusNode,
-                      keyboardType: TextInputType.name,
-                      textInputAction: TextInputAction.done,
-                      suffixIcon: IconButton(
-                        tooltip: 'add member',
-                        icon: const Icon(Icons.add_circle_outline_rounded),
-                        onPressed: _addParticipantFromInput,
+            body: SingleChildScrollView(
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  CommonButton(
+                    text: _isOcrProcessing ? 'processing...' : 'scan receipt',
+                    icon: _isOcrProcessing ? null : Icons.document_scanner_rounded,
+                    iconColor: colorScheme.onPrimary,
+                    borderRadius: 8,
+                    mainAxisSize: MainAxisSize.max,
+                    onTap: _isOcrProcessing ? null : _onOcrTap,
+                  ).paddingAll(16),
+                  _formSection(
+                    title: 'participants',
+                    showDivider: false,
+                    children: [
+                      CommonTextField(
+                        hintText: 'Add name...',
+                        controller: _participantsController,
+                        textCapitalization: TextCapitalization.words,
+                        currentFocus: _participantsFocusNode,
+                        keyboardType: TextInputType.name,
+                        textInputAction: TextInputAction.done,
+                        suffixIcon: IconButton(
+                          tooltip: 'add member',
+                          icon: const Icon(Icons.add_circle_outline_rounded),
+                          onPressed: _addParticipantFromInput,
+                        ),
+                        onFieldSubmitted: (_) => _addParticipantFromInput(),
                       ),
-                      onFieldSubmitted: (_) => _addParticipantFromInput(),
-                    ),
-                    verticalSpace(10),
-                    _participantChips(),
-                  ],
-                ),
-                _formSection(
-                  title: 'payment',
-                  children: [
-                    CommonTextField(
-                      label: 'Occasion *',
-                      hintText: 'Dinner, outing, groceries',
-                      controller: _occasionController,
-                      currentFocus: _occasionFocusNode,
-                      nextFocus: _amountFocusNode,
-                      textCapitalization: TextCapitalization.words,
-                      keyboardType: TextInputType.name,
-                      textInputAction: TextInputAction.next,
-                      onChanged: (value) => _formData.occasion = value,
-                    ),
-                    verticalSpace(16),
-                    CommonDropdown<String>(
-                      label: 'Paid by',
-                      hintText: _participants.isEmpty ? 'add participants first' : 'select person',
-                      value: _participants.contains(_formData.paidBy) ? _formData.paidBy : null,
-                      items: _participants.map((name) => DropdownMenuItem<String>(value: name, child: Text(name))).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          if (value != null) _formData.paidBy = value;
-                        });
-                      },
-                    ),
-                    verticalSpace(16),
-                    CommonTextField(
-                      label: 'Amount paid',
-                      hintText: '0.00',
-                      controller: _amountController,
-                      currentFocus: _amountFocusNode,
-                      nextFocus: _taxFocusNode,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      textInputAction: TextInputAction.next,
-                    ),
-                    verticalSpace(16),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: CommonTextField(
-                            label: 'Tax (%)',
-                            hintText: '5.0',
-                            controller: _taxController,
-                            currentFocus: _taxFocusNode,
-                            nextFocus: _serviceFocusNode,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            textInputAction: TextInputAction.next,
-                          ),
-                        ),
-                        horizontalSpace(10),
-                        Flexible(
-                          child: CommonTextField(
-                            label: 'Service (%)',
-                            hintText: '0.0',
-                            controller: _serviceController,
-                            currentFocus: _serviceFocusNode,
-                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                            textInputAction: TextInputAction.next,
-                            onFieldSubmitted: (_) => _focusItemName(0),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                _formSection(
-                  title: 'items',
-                  trailing: Text(
-                    '${_formData.items.length}',
-                    style: TextStyle(
-                      color: colorScheme.onSurface,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
+                      verticalSpace(10),
+                      _participantChips(),
+                    ],
                   ),
-                  children: [
-                    Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList()),
-                    verticalSpace(12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _addItem(focusNewItem: true),
-                        icon: const Icon(Icons.add_rounded),
-                        label: const Text('add item'),
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size.fromHeight(48),
-                          foregroundColor: colorScheme.primary,
-                          side: BorderSide(color: colorScheme.outline),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                        ),
+                  _formSection(
+                    title: 'payment',
+                    children: [
+                      CommonTextField(
+                        label: 'Occasion *',
+                        hintText: 'Dinner, outing, groceries',
+                        controller: _occasionController,
+                        currentFocus: _occasionFocusNode,
+                        nextFocus: _amountFocusNode,
+                        textCapitalization: TextCapitalization.words,
+                        keyboardType: TextInputType.name,
+                        textInputAction: TextInputAction.next,
+                        onChanged: (value) => _formData.occasion = value,
+                      ),
+                      verticalSpace(16),
+                      CommonDropdown<String>(
+                        label: 'Paid by',
+                        hintText: _participants.isEmpty ? 'add participants first' : 'select person',
+                        value: _participants.contains(_formData.paidBy) ? _formData.paidBy : null,
+                        items: _participants.map((name) => DropdownMenuItem<String>(value: name, child: Text(name))).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            if (value != null) _formData.paidBy = value;
+                          });
+                        },
+                      ),
+                      verticalSpace(16),
+                      CommonTextField(
+                        label: 'Amount paid',
+                        hintText: '0.00',
+                        controller: _amountController,
+                        currentFocus: _amountFocusNode,
+                        nextFocus: _taxFocusNode,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        textInputAction: TextInputAction.next,
+                      ),
+                      verticalSpace(16),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: CommonTextField(
+                              label: 'Tax (%)',
+                              hintText: '5.0',
+                              controller: _taxController,
+                              currentFocus: _taxFocusNode,
+                              nextFocus: _serviceFocusNode,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              textInputAction: TextInputAction.next,
+                            ),
+                          ),
+                          horizontalSpace(10),
+                          Flexible(
+                            child: CommonTextField(
+                              label: 'Service (%)',
+                              hintText: '0.0',
+                              controller: _serviceController,
+                              currentFocus: _serviceFocusNode,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              textInputAction: TextInputAction.next,
+                              onFieldSubmitted: (_) => _focusItemName(0),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  _formSection(
+                    title: 'items',
+                    trailing: Text(
+                      '${_formData.items.length}',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          bottomNavigationBar: Container(
-            decoration: BoxDecoration(color: colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(10)),
-            padding: const EdgeInsets.all(16),
-            child: SafeArea(
-              child: CommonButton(
-                text: 'save bill',
-                mainAxisSize: MainAxisSize.max,
-                borderRadius: 8,
-                icon: Icons.save,
-                iconColor: colorScheme.onPrimary,
-                onTap: _saveBill,
+                    children: [
+                      Column(children: _formData.items.asMap().entries.map((entry) => itemCard(entry.key)).toList()),
+                      verticalSpace(12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: () => _addItem(focusNewItem: true),
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('add item'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size.fromHeight(48),
+                            foregroundColor: colorScheme.primary,
+                            side: BorderSide(color: colorScheme.outline),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-          ),
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(color: colorScheme.surfaceContainer, borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.all(16),
+              child: SafeArea(
+                child: CommonButton(
+                  text: 'save bill',
+                  mainAxisSize: MainAxisSize.max,
+                  borderRadius: 8,
+                  icon: Icons.save,
+                  iconColor: colorScheme.onPrimary,
+                  onTap: _saveBill,
+                ),
+              ),
+            ),
           ),
         );
       },

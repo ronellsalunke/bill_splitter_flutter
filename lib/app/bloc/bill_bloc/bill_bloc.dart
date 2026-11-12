@@ -8,7 +8,7 @@ import 'bill_state.dart';
 class BillBloc extends Bloc<BillEvent, BillState> {
   final Box<Bill> _billBox;
 
-  BillBloc(this._billBox) : super(BillInitial()) {
+  BillBloc(this._billBox) : super(const BillInitial()) {
     on<LoadBills>(_onLoadBills);
     on<AddBill>(_onAddBill);
     on<UpdateBill>(_onUpdateBill);
@@ -16,7 +16,7 @@ class BillBloc extends Bloc<BillEvent, BillState> {
   }
 
   Future<void> _onLoadBills(LoadBills event, Emitter<BillState> emit) async {
-    emit(BillLoading());
+    emit(const BillLoading());
     try {
       final bills = _billBox.values.toList();
       emit(BillLoaded(bills));

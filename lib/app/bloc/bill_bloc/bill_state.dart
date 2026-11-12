@@ -2,17 +2,23 @@ import 'package:equatable/equatable.dart';
 
 import '../../models/bill.dart';
 
-abstract class BillState extends Equatable {
+sealed class BillState extends Equatable {
+  const BillState();
+
   @override
   List<Object?> get props => [];
 }
 
-class BillInitial extends BillState {}
+final class BillInitial extends BillState {
+  const BillInitial();
+}
 
-class BillLoading extends BillState {}
+final class BillLoading extends BillState {
+  const BillLoading();
+}
 
-class BillLoaded extends BillState {
-  BillLoaded(this.bills);
+final class BillLoaded extends BillState {
+  const BillLoaded(this.bills);
 
   final List<Bill> bills;
 
@@ -20,8 +26,8 @@ class BillLoaded extends BillState {
   List<Object?> get props => [bills];
 }
 
-class BillError extends BillState {
-  BillError(this.message);
+final class BillError extends BillState {
+  const BillError(this.message);
 
   final String message;
 

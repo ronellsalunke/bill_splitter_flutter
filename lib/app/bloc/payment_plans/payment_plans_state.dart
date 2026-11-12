@@ -1,17 +1,23 @@
 import 'package:bs_flutter/app/models/split/split_model.dart';
 import 'package:equatable/equatable.dart';
 
-abstract class PaymentPlansState extends Equatable {
+sealed class PaymentPlansState extends Equatable {
+  const PaymentPlansState();
+
   @override
   List<Object?> get props => [];
 }
 
-class PaymentPlansInitial extends PaymentPlansState {}
+final class PaymentPlansInitial extends PaymentPlansState {
+  const PaymentPlansInitial();
+}
 
-class PaymentPlansLoading extends PaymentPlansState {}
+final class PaymentPlansLoading extends PaymentPlansState {
+  const PaymentPlansLoading();
+}
 
-class PaymentPlansLoaded extends PaymentPlansState {
-  PaymentPlansLoaded(this.splitModel);
+final class PaymentPlansLoaded extends PaymentPlansState {
+  const PaymentPlansLoaded(this.splitModel);
 
   final SplitModel splitModel;
 
@@ -19,11 +25,15 @@ class PaymentPlansLoaded extends PaymentPlansState {
   List<Object?> get props => [splitModel];
 }
 
-class PaymentPlansError extends PaymentPlansState {
-  PaymentPlansError(this.message);
+final class PaymentPlansError extends PaymentPlansState {
+  const PaymentPlansError(this.message);
 
   final String message;
 
   @override
   List<Object?> get props => [message];
+}
+
+final class PaymentPlansOffline extends PaymentPlansState {
+  const PaymentPlansOffline();
 }

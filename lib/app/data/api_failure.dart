@@ -8,7 +8,7 @@ final class ApiFailure implements Exception {
   final int? statusCode;
 
   String get userMessage => switch (kind) {
-    ApiFailureKind.network => 'No internet connection. Check your connection and try again.',
+    ApiFailureKind.network => 'Could not reach the server. Check your connection and try again.',
     ApiFailureKind.timeout => 'Request timed out. Try again.',
     ApiFailureKind.parsing => 'Unexpected server response. Try again.',
     ApiFailureKind.unknown => 'Something went wrong. Try again.',
