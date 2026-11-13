@@ -1,6 +1,6 @@
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/app/widgets/common_outline_button.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

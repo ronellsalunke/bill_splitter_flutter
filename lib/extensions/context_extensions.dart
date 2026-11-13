@@ -1,5 +1,5 @@
 import 'package:bs_flutter/app/theme/app_theme.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 extension ContextExtensions on BuildContext {
   ThemeData get theme => Theme.of(this);

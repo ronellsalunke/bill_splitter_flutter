@@ -1,7 +1,7 @@
 import 'package:bs_flutter/application.dart';
 import 'package:bs_flutter/app/di/service_locator.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 
@@ -18,7 +18,6 @@ void main() async {
       // Adds request headers and IP for users, for more info visit:
       // https://docs.sentry.io/platforms/dart/guides/flutter/data-management/data-collected/
       options.sendDefaultPii = true;
-      options.enableLogs = true;
       // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing.
       // We recommend adjusting this value in production.
       options.tracesSampleRate = 1.0;

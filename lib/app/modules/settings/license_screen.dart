@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class LicenseScreen extends StatelessWidget {
   const LicenseScreen({super.key});

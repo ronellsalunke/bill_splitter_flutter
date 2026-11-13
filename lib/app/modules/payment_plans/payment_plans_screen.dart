@@ -9,7 +9,7 @@ import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/extensions/extensions.dart';
 import 'package:bs_flutter/extensions/widget_extensions.dart';
 import 'package:bs_flutter/utils/payment_plan_exporter.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:share_plus/share_plus.dart';

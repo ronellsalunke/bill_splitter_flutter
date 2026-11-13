@@ -1,6 +1,6 @@
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:dropdown_button2/dropdown_button2.dart' as dropdown_button2;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class CommonMultiDropdownItem<T extends Object> {
   final String label;

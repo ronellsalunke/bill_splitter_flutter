@@ -3,7 +3,7 @@ import 'package:bs_flutter/app/modules/home/home_bill_date_formatter.dart';
 import 'package:bs_flutter/app/widgets/clickable.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class HomeBillCard extends StatefulWidget {

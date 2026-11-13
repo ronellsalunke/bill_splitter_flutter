@@ -1,5 +1,5 @@
 import 'package:bs_flutter/extensions/context_extensions.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class QuantityStepper extends StatelessWidget {
   const QuantityStepper({super.key, required this.value, required this.onDecrement, required this.onIncrement})

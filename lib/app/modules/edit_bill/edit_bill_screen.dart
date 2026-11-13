@@ -21,7 +21,7 @@ import 'package:bs_flutter/utils/share_intent_service.dart';
 import 'package:bs_flutter/utils/swipe_hint_preferences.dart';
 import 'package:bs_flutter/utils/utility.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';

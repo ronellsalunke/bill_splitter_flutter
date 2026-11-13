@@ -3,7 +3,7 @@ import 'package:bs_flutter/app/routes/router.dart';
 import 'package:bs_flutter/app/widgets/common_button.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:stupid_simple_sheet/stupid_simple_sheet.dart';
 

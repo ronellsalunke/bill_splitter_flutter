@@ -1,7 +1,7 @@
 import 'package:bs_flutter/app/routes/router.dart';
 import 'package:bs_flutter/extensions/context_extensions.dart';
 import 'package:bs_flutter/utils/widget_utils.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:material_segmented_list/material_segmented_list.dart';

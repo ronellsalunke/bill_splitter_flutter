@@ -4,7 +4,7 @@ import 'package:bs_flutter/app/modules/home/home_screen.dart';
 import 'package:bs_flutter/app/modules/payment_plans/payment_plans_screen.dart';
 import 'package:bs_flutter/app/modules/settings/license_screen.dart';
 import 'package:bs_flutter/app/modules/settings/settings_screen.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:go_router/go_router.dart';
 
 final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();

@@ -3,17 +3,12 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-}
-
-kotlin {
-    jvmToolchain(17)
 }
 
 android {
     namespace = "com.ronell.billsplitter"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -23,7 +18,7 @@ android {
 
     defaultConfig {
         applicationId = "com.ronell.billsplitter"
-        minSdk = flutter.minSdkVersion
+        minSdk = 26
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -65,6 +60,12 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 
