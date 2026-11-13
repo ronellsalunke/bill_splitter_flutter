@@ -9,11 +9,22 @@ import 'package:bs_flutter/app/routes/router.dart';
 import 'package:bs_flutter/app/theme/app_theme.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flutter/foundation.dart';
-import 'package:material_ui/material_ui.dart';
+// Legacy bridge for dependencies that still use package:flutter/material.dart.
+// ignore: deprecated_member_use
+import 'package:flutter/material.dart' as legacy;
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:quick_actions/quick_actions.dart';
 
 const _newBillShortcutType = 'new_bill_shortcut';
+
+/// Bridges the material_ui theme into a legacy Theme and localizations, and adds
+/// the legacy Material ancestor that dependencies such as dropdown_button2
+/// still assert on.
+// ignore: deprecated_member_use
+Widget _bridgeLegacyMaterial(Widget child) => MaterialUiCompatibilityBridge(
+  child: legacy.Material(type: legacy.MaterialType.transparency, child: child),
+);
 
 extension on AppThemeMode {
   ThemeMode get flutterThemeMode => switch (this) {
@@ -124,6 +135,7 @@ class _BillSplitterApplicationState extends State<BillSplitterApplication> with 
                 ),
                 themeMode: themeState.themeMode.flutterThemeMode,
                 routerConfig: router,
+                builder: (context, child) => _bridgeLegacyMaterial(child!),
               );
             },
           );
